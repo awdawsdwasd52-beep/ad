@@ -3,20 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Full Chat - Infinite Scroll with Reply & Delete</title>
+    <title>Discord Clone - Full Chat System with Admin Panel</title>
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
+        /* Все стили из предыдущей версии + улучшенные */
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Segoe UI', 'Helvetica Neue', sans-serif;
         }
 
         body {
-            background: black;
+            background: #1e1f22;
             height: 100vh;
             width: 100vw;
             overflow: hidden;
@@ -26,65 +27,190 @@
             display: flex;
             height: 100vh;
             width: 100vw;
-            background: black;
+            background: #1e1f22;
         }
 
+        /* Серверная боковая панель */
+        .servers-sidebar {
+            width: 72px;
+            background: #1e1f22;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 0;
+            overflow-y: auto;
+            border-right: 1px solid #2b2d31;
+        }
+
+        .server-item {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: #2b2d31;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            position: relative;
+            color: #dbdee1;
+            font-weight: bold;
+            font-size: 20px;
+        }
+
+        .server-item:hover {
+            border-radius: 16px;
+            background: #5865f2;
+        }
+
+        .server-item.active {
+            border-radius: 16px;
+            background: #5865f2;
+        }
+
+        .server-item.active::before {
+            content: '';
+            position: absolute;
+            left: -12px;
+            width: 4px;
+            height: 32px;
+            background: white;
+            border-radius: 4px;
+        }
+
+        .add-server-btn {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: #2b2d31;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: #23a55a;
+            font-size: 24px;
+            margin-top: 8px;
+        }
+
+        .add-server-btn:hover {
+            border-radius: 16px;
+            background: #23a55a;
+            color: white;
+        }
+
+        /* Каналы и друзья */
         .channels-sidebar {
-            width: 280px;
-            background: #0a0a0a;
-            border-right: 1px solid #2a2a2a;
+            width: 240px;
+            background: #2b2d31;
             display: flex;
             flex-direction: column;
             overflow-y: auto;
         }
 
-        .channels-header {
-            padding: 20px;
-            border-bottom: 1px solid #2a2a2a;
+        .sidebar-header {
+            padding: 16px;
+            border-bottom: 1px solid #1e1f22;
             color: white;
-            font-weight: bold;
-            font-size: 1.2rem;
-        }
-
-        .channels-list {
-            flex: 1;
-            padding: 10px;
-        }
-
-        .channel-item {
-            padding: 10px 15px;
-            margin: 5px 0;
-            border-radius: 8px;
-            color: #888;
+            font-weight: 600;
             cursor: pointer;
-            transition: all 0.3s;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
 
-        .channel-item:hover {
-            background: #1a1a1a;
+        .sidebar-header:hover {
+            background: #1e1f22;
+        }
+
+        .friends-header {
+            padding: 16px;
+            color: white;
+            font-weight: 600;
+            border-bottom: 1px solid #1e1f22;
+        }
+
+        .friends-list, .channels-list, .dm-list {
+            flex: 1;
+            padding: 8px;
+        }
+
+        .friend-item, .dm-item, .channel-item {
+            padding: 8px 12px;
+            margin: 2px 0;
+            border-radius: 8px;
+            color: #949ba4;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .friend-item:hover, .dm-item:hover, .channel-item:hover {
+            background: #1e1f22;
+            color: #dbdee1;
+        }
+
+        .friend-item.active, .dm-item.active, .channel-item.active {
+            background: #1e1f22;
             color: white;
         }
 
-        .channel-item.active {
-            background: #2b2b2b;
-            color: white;
+        .friend-avatar, .dm-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            object-fit: cover;
         }
 
-        .add-channel-btn {
-            margin: 10px;
-            padding: 10px;
-            background: #2b2b2b;
-            border: 1px solid #3a3a3a;
+        .friend-info, .dm-info {
+            flex: 1;
+        }
+
+        .friend-name {
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .friend-status {
+            font-size: 11px;
+            color: #23a55a;
+        }
+
+        .add-friend-btn {
+            margin: 12px;
+            padding: 8px;
+            background: #1e1f22;
+            border: none;
             border-radius: 8px;
             color: white;
             cursor: pointer;
             text-align: center;
+            font-size: 14px;
         }
 
-        .add-channel-btn:hover {
-            background: #3a3a3a;
+        .add-friend-btn:hover {
+            background: #5865f2;
         }
 
+        .admin-panel-btn {
+            margin: 12px;
+            padding: 8px;
+            background: #ed4245;
+            border: none;
+            border-radius: 8px;
+            color: white;
+            cursor: pointer;
+            text-align: center;
+            font-size: 14px;
+        }
+
+        .admin-panel-btn:hover {
+            background: #c03537;
+        }
+
+        /* Основной чат */
         .main-container {
             flex: 1;
             display: flex;
@@ -93,65 +219,86 @@
         }
 
         .chat-header {
-            background: #0a0a0a;
+            background: #2b2d31;
             color: white;
-            padding: 15px 20px;
+            padding: 12px 20px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            border-bottom: 1px solid #2a2a2a;
+            border-bottom: 1px solid #1e1f22;
+            box-shadow: 0 1px 0 rgba(0,0,0,0.2);
+        }
+
+        .channel-info h2 {
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .channel-info p {
+            font-size: 12px;
+            color: #949ba4;
+        }
+
+        .slowmode-indicator {
+            font-size: 11px;
+            color: #f0b232;
+            margin-left: 8px;
         }
 
         .user-profile {
             display: flex;
             align-items: center;
-            gap: 15px;
+            gap: 12px;
         }
 
         .profile-btn {
-            background: #2b2b2b;
-            border: 1px solid #3a3a3a;
-            padding: 8px 15px;
-            border-radius: 20px;
+            background: #1e1f22;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 8px;
             cursor: pointer;
             color: white;
-            font-size: 0.8rem;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
 
         .profile-btn:hover {
-            background: #3a3a3a;
+            background: #2b2d31;
         }
 
-        .channel-info h2 {
-            font-size: 1.2rem;
+        .logout-btn {
+            background: #1e1f22;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            color: #ed4245;
+            font-size: 14px;
         }
 
-        .channel-info p {
-            font-size: 0.8rem;
-            color: #888;
+        .logout-btn:hover {
+            background: #ed4245;
+            color: white;
         }
 
-        .slowmode-indicator {
-            font-size: 0.7rem;
-            color: #ffaa44;
-            margin-left: 10px;
-        }
-
+        /* Сообщения */
         .chat-messages {
             flex: 1;
             overflow-y: auto;
-            padding: 20px;
-            background: black;
+            padding: 16px 20px;
+            background: #1e1f22;
             display: flex;
             flex-direction: column;
-            gap: 12px;
+            gap: 4px;
         }
 
         .messages-loader {
             text-align: center;
-            padding: 15px;
-            color: #888;
-            font-size: 0.8rem;
+            padding: 20px;
+            color: #949ba4;
+            font-size: 12px;
             display: none;
         }
 
@@ -159,113 +306,95 @@
             display: block;
         }
 
+        .message-group {
+            margin-bottom: 8px;
+        }
+
         .message {
-            max-width: 70%;
-            padding: 10px 15px;
-            border-radius: 18px;
-            word-wrap: break-word;
-            animation: fadeIn 0.2s ease;
+            padding: 4px 16px;
             position: relative;
-            transition: background 0.2s;
+            transition: background 0.1s;
+            border-radius: 4px;
         }
 
         .message:hover {
-            filter: brightness(1.1);
+            background: #2b2d31;
         }
 
-        .message.media-message {
-            padding: 5px;
+        .message.pinned {
+            background: rgba(88, 101, 242, 0.1);
+            border-left: 3px solid #5865f2;
         }
 
-        .message.media-message img, .message.media-message video {
-            max-width: 300px;
-            max-height: 300px;
-            border-radius: 10px;
-            cursor: pointer;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .message.sent {
-            background: #2b2b2b;
-            color: white;
-            align-self: flex-end;
-            border-bottom-right-radius: 4px;
-        }
-
-        .message.received {
-            background: #1a1a1a;
-            color: #e0e0e0;
-            align-self: flex-start;
-            border-bottom-left-radius: 4px;
-        }
-
-        .message-info {
-            font-size: 0.7rem;
-            margin-bottom: 4px;
-            opacity: 0.7;
-            color: #888;
+        .message-header {
             display: flex;
-            align-items: center;
+            align-items: baseline;
             gap: 8px;
-            flex-wrap: wrap;
+            margin-bottom: 4px;
         }
 
         .message-avatar {
-            width: 24px;
-            height: 24px;
+            width: 40px;
+            height: 40px;
             border-radius: 50%;
-            object-fit: cover;
+            cursor: pointer;
+            position: absolute;
+            left: 16px;
+        }
+
+        .message-content {
+            margin-left: 56px;
+        }
+
+        .message-author {
+            font-weight: 500;
+            color: white;
+            font-size: 16px;
             cursor: pointer;
         }
 
-        .role-badge {
-            display: inline-block;
-            padding: 2px 6px;
-            border-radius: 4px;
-            font-size: 0.7rem;
-            font-weight: bold;
+        .message-timestamp {
+            font-size: 11px;
+            color: #949ba4;
+        }
+
+        .message-text {
+            color: #dbdee1;
+            font-size: 14px;
+            line-height: 1.4;
+            word-wrap: break-word;
+        }
+
+        .message-text img, .message-text video {
+            max-width: 400px;
+            max-height: 400px;
+            border-radius: 8px;
+            margin-top: 4px;
+            cursor: pointer;
         }
 
         .reply-preview {
-            background: rgba(255,255,255,0.1);
-            border-left: 3px solid #667eea;
-            padding: 5px 10px;
+            background: rgba(255,255,255,0.05);
+            border-left: 3px solid #5865f2;
+            padding: 6px 12px;
             margin-bottom: 8px;
-            font-size: 0.8rem;
-            border-radius: 8px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .reply-preview span {
-            color: #aaa;
-        }
-
-        .cancel-reply {
-            background: none;
-            border: none;
-            color: #ff4444;
-            cursor: pointer;
-            font-size: 1.2rem;
-            padding: 0 5px;
+            font-size: 12px;
+            border-radius: 4px;
+            color: #949ba4;
         }
 
         .message-actions {
             position: absolute;
-            right: 10px;
-            top: -20px;
-            background: #2b2b2b;
+            right: 16px;
+            top: -16px;
+            background: #1e1f22;
             border-radius: 8px;
             padding: 4px 8px;
-            gap: 8px;
+            gap: 4px;
             display: none;
             z-index: 10;
             box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            border: 1px solid #2b2d31;
         }
 
         .message:hover .message-actions {
@@ -275,39 +404,38 @@
         .message-action-btn {
             background: none;
             border: none;
-            color: white;
+            color: #dbdee1;
             cursor: pointer;
             padding: 4px 8px;
-            font-size: 0.75rem;
+            font-size: 12px;
             border-radius: 4px;
             transition: background 0.2s;
         }
 
         .message-action-btn:hover {
-            background: #3a3a3a;
+            background: #2b2d31;
         }
 
-        .reply-btn:hover { color: #667eea; }
-        .delete-btn:hover { color: #ff4444; }
+        .pin-btn:hover { color: #5865f2; }
+        .reply-btn:hover { color: #5865f2; }
+        .delete-btn:hover { color: #ed4245; }
 
+        /* Панель ввода */
         .bottom-panel {
-            padding: 15px 20px;
-            background: black;
-            border-top: 1px solid #2a2a2a;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
+            padding: 0 20px 20px 20px;
+            background: #1e1f22;
         }
 
         .reply-bar {
-            background: #1a1a1a;
+            background: #2b2d31;
             border-radius: 8px;
             padding: 8px 12px;
+            margin-bottom: 8px;
             display: none;
             justify-content: space-between;
             align-items: center;
-            color: #aaa;
-            font-size: 0.85rem;
+            color: #dbdee1;
+            font-size: 13px;
         }
 
         .reply-bar.active {
@@ -316,143 +444,68 @@
 
         .input-area {
             display: flex;
-            gap: 10px;
+            gap: 12px;
             align-items: center;
-        }
-
-        .admin-btn {
-            background: #2b2b2b;
-            border: 1px solid #3a3a3a;
-            padding: 10px 20px;
-            border-radius: 25px;
-            color: white;
-            cursor: pointer;
-            font-size: 0.9rem;
-            white-space: nowrap;
-        }
-
-        .admin-btn:hover {
-            background: #3a3a3a;
+            background: #2b2d31;
+            border-radius: 12px;
+            padding: 8px 16px;
         }
 
         .message-input-wrapper {
             flex: 1;
             display: flex;
-            gap: 10px;
+            gap: 8px;
         }
 
         #messageInput {
             flex: 1;
-            padding: 12px 16px;
-            border: 1px solid #2a2a2a;
-            border-radius: 25px;
+            background: none;
+            border: none;
             outline: none;
-            font-size: 1rem;
-            background: #1a1a1a;
             color: white;
+            font-size: 14px;
+            padding: 10px 0;
         }
 
-        #messageInput:focus {
-            border-color: #4a4a4a;
+        #messageInput::placeholder {
+            color: #949ba4;
         }
 
         .media-buttons {
             display: flex;
-            gap: 5px;
+            gap: 4px;
         }
 
         .media-btn {
-            background: #2b2b2b;
-            border: 1px solid #3a3a3a;
-            padding: 0 15px;
-            border-radius: 25px;
+            background: none;
+            border: none;
+            color: #949ba4;
             cursor: pointer;
-            color: white;
-            font-size: 0.9rem;
+            padding: 6px 10px;
+            border-radius: 4px;
+            font-size: 14px;
         }
 
         .media-btn:hover {
-            background: #3a3a3a;
+            background: #1e1f22;
+            color: white;
         }
 
         #sendButton {
-            background: #2b2b2b;
+            background: #5865f2;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 8px;
             color: white;
-            border: 1px solid #3a3a3a;
-            padding: 0 24px;
-            border-radius: 25px;
             cursor: pointer;
-            font-weight: bold;
+            font-weight: 500;
         }
 
         #sendButton:hover {
-            background: #3a3a3a;
+            background: #4752c4;
         }
 
-        .members-sidebar {
-            width: 280px;
-            background: #0a0a0a;
-            border-left: 1px solid #2a2a2a;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .members-header {
-            padding: 20px;
-            border-bottom: 1px solid #2a2a2a;
-            color: white;
-            font-weight: bold;
-            font-size: 1.2rem;
-        }
-
-        .members-list {
-            flex: 1;
-            overflow-y: auto;
-            padding: 10px;
-        }
-
-        .member-item {
-            padding: 10px 15px;
-            margin: 5px 0;
-            border-radius: 8px;
-            color: #888;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            cursor: pointer;
-        }
-
-        .member-item:hover {
-            background: #1a1a1a;
-        }
-
-        .member-avatar {
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
-            object-fit: cover;
-        }
-
-        .member-name {
-            flex: 1;
-            color: white;
-        }
-
-        .member-role {
-            font-size: 0.7rem;
-            padding: 2px 6px;
-            border-radius: 4px;
-        }
-
-        .status-text {
-            padding: 8px;
-            text-align: center;
-            font-size: 0.8rem;
-            color: #666;
-            background: #0a0a0a;
-            border-top: 1px solid #2a2a2a;
-        }
-
+        /* Модальные окна */
         .modal {
             display: none;
             position: fixed;
@@ -460,19 +513,20 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0,0,0,0.9);
+            background: rgba(0,0,0,0.8);
             z-index: 2000;
-            overflow-y: auto;
         }
 
         .modal-content {
-            background: #0a0a0a;
+            background: #2b2d31;
             margin: 50px auto;
             padding: 20px;
             width: 90%;
             max-width: 600px;
-            border-radius: 10px;
-            border: 1px solid #2a2a2a;
+            border-radius: 8px;
+            color: white;
+            max-height: 80vh;
+            overflow-y: auto;
         }
 
         .modal-header {
@@ -480,21 +534,153 @@
             justify-content: space-between;
             align-items: center;
             margin-bottom: 20px;
-            color: white;
         }
 
         .close-modal {
             background: none;
             border: none;
             color: white;
-            font-size: 1.5rem;
+            font-size: 24px;
             cursor: pointer;
         }
+
+        .admin-tabs {
+            display: flex;
+            gap: 10px;
+            border-bottom: 1px solid #1e1f22;
+            margin-bottom: 20px;
+        }
+
+        .admin-tab {
+            padding: 10px 20px;
+            cursor: pointer;
+            color: #949ba4;
+        }
+
+        .admin-tab.active {
+            color: white;
+            border-bottom: 2px solid #5865f2;
+        }
+
+        .admin-panel {
+            display: none;
+        }
+
+        .admin-panel.active {
+            display: block;
+        }
+
+        .user-item, .role-item, .channel-item-admin {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            border-bottom: 1px solid #1e1f22;
+        }
+
+        .ban-btn, .mute-btn, .edit-btn, .delete-btn, .config-btn {
+            background: #1e1f22;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-left: 5px;
+            color: white;
+            font-size: 12px;
+        }
+
+        .ban-btn:hover { background: #ed4245; }
+        .mute-btn:hover { background: #f0b232; }
+        .config-btn:hover { background: #5865f2; }
+
+        .pinned-messages {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .pinned-message {
+            padding: 12px;
+            border-bottom: 1px solid #1e1f22;
+            cursor: pointer;
+        }
+
+        .pinned-message:hover {
+            background: #1e1f22;
+        }
+
+        .auth-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #1e1f22;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .auth-container {
+            background: #2b2d31;
+            border-radius: 8px;
+            padding: 32px;
+            width: 90%;
+            max-width: 400px;
+        }
+
+        .auth-title {
+            color: white;
+            font-size: 24px;
+            text-align: center;
+            margin-bottom: 24px;
+        }
+
+        .auth-input {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 16px;
+            background: #1e1f22;
+            border: 1px solid #3b3f48;
+            border-radius: 4px;
+            color: white;
+            font-size: 14px;
+        }
+
+        .auth-button {
+            width: 100%;
+            padding: 12px;
+            background: #5865f2;
+            border: none;
+            border-radius: 4px;
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+            margin-bottom: 12px;
+        }
+
+        .auth-switch {
+            text-align: center;
+            color: #5865f2;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .error-message {
+            color: #ed4245;
+            text-align: center;
+            margin-bottom: 16px;
+            font-size: 14px;
+        }
+
+        .status-online { color: #23a55a; }
+        .status-idle { color: #f0b232; }
+        .status-offline { color: #80848e; }
 
         .channel-permissions {
             margin: 15px 0;
             padding: 15px;
-            background: #1a1a1a;
+            background: #1e1f22;
             border-radius: 8px;
         }
 
@@ -508,231 +694,30 @@
             margin-bottom: 8px;
         }
 
-        .permission-select {
+        .permission-select, .slowmode-input {
             width: 100%;
             padding: 8px;
-            background: #2b2b2b;
-            border: 1px solid #3a3a3a;
+            background: #2b2d31;
+            border: 1px solid #3b3f48;
             color: white;
             border-radius: 5px;
         }
 
-        .slowmode-input {
-            width: 100px;
-            padding: 8px;
-            background: #2b2b2b;
-            border: 1px solid #3a3a3a;
-            color: white;
-            border-radius: 5px;
+        ::-webkit-scrollbar {
+            width: 8px;
         }
 
-        .profile-preview {
-            text-align: center;
-            margin-bottom: 20px;
+        ::-webkit-scrollbar-track {
+            background: #1e1f22;
         }
 
-        .profile-avatar-preview {
-            width: 100px;
-            height: 100px;
-            border-radius: 50%;
-            object-fit: cover;
-            border: 2px solid #2a2a2a;
+        ::-webkit-scrollbar-thumb {
+            background: #2b2d31;
+            border-radius: 4px;
         }
 
-        .profile-input {
-            width: 100%;
-            padding: 12px;
-            background: #1a1a1a;
-            border: 1px solid #2a2a2a;
-            border-radius: 8px;
-            color: white;
-            margin-bottom: 15px;
-        }
-
-        .save-profile-btn {
-            width: 100%;
-            padding: 12px;
-            background: #2b2b2b;
-            border: 1px solid #3a3a3a;
-            border-radius: 8px;
-            color: white;
-            cursor: pointer;
-        }
-
-        .admin-tabs {
-            display: flex;
-            gap: 10px;
-            border-bottom: 1px solid #2a2a2a;
-            margin-bottom: 20px;
-        }
-
-        .admin-tab {
-            padding: 10px 20px;
-            cursor: pointer;
-            color: #888;
-        }
-
-        .admin-tab.active {
-            color: white;
-            border-bottom: 2px solid #667eea;
-        }
-
-        .admin-panel {
-            display: none;
-        }
-
-        .admin-panel.active {
-            display: block;
-        }
-
-        .user-list, .role-list, .channel-list {
-            max-height: 400px;
-            overflow-y: auto;
-        }
-
-        .user-item, .role-item, .channel-item-admin {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 10px;
-            border-bottom: 1px solid #2a2a2a;
-            color: white;
-        }
-
-        .ban-btn, .mute-btn, .delete-btn, .edit-btn, .config-btn {
-            background: #2b2b2b;
-            border: 1px solid #3a3a3a;
-            padding: 5px 10px;
-            border-radius: 5px;
-            cursor: pointer;
-            margin-left: 5px;
-            color: white;
-        }
-
-        .ban-btn:hover { background: #ff4444; }
-        .mute-btn:hover { background: #ffaa44; }
-        .config-btn:hover { background: #44aa44; }
-        
-        input, select {
-            background: #1a1a1a;
-            border: 1px solid #2a2a2a;
-            padding: 8px;
-            color: white;
-            border-radius: 5px;
-            margin: 5px 0;
-        }
-
-        .auth-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.95);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
-        }
-
-        .auth-container {
-            background: #0a0a0a;
-            border: 1px solid #2a2a2a;
-            border-radius: 20px;
-            padding: 40px;
-            width: 90%;
-            max-width: 400px;
-        }
-
-        .auth-title {
-            color: white;
-            font-size: 1.8rem;
-            text-align: center;
-            margin-bottom: 30px;
-        }
-
-        .auth-input {
-            width: 100%;
-            padding: 12px 16px;
-            margin-bottom: 20px;
-            background: #1a1a1a;
-            border: 1px solid #2a2a2a;
-            border-radius: 10px;
-            color: white;
-            font-size: 1rem;
-            outline: none;
-        }
-
-        .auth-button {
-            width: 100%;
-            padding: 12px;
-            background: #2b2b2b;
-            border: 1px solid #3a3a3a;
-            border-radius: 10px;
-            color: white;
-            font-size: 1rem;
-            cursor: pointer;
-            margin-bottom: 15px;
-        }
-
-        .auth-switch {
-            text-align: center;
-            color: #888;
-            cursor: pointer;
-        }
-
-        .error-message {
-            color: #ff4444;
-            text-align: center;
-            margin-bottom: 15px;
-        }
-
-        .logout-btn {
-            background: #2b2b2b;
-            border: 1px solid #3a3a3a;
-            padding: 5px 15px;
-            border-radius: 15px;
-            cursor: pointer;
-            color: white;
-            font-size: 0.8rem;
-        }
-
-        .swal2-popup {
-            background: #0a0a0a !important;
-            border: 1px solid #2a2a2a !important;
-        }
-        
-        .swal2-title, .swal2-html-container {
-            color: white !important;
-        }
-        
-        .swal2-input, .swal2-select, .swal2-file {
-            background: #1a1a1a !important;
-            border: 1px solid #2a2a2a !important;
-            color: white !important;
-        }
-        
-        .swal2-confirm, .swal2-cancel {
-            background: #2b2b2b !important;
-            border: 1px solid #3a3a3a !important;
-            color: white !important;
-        }
-        
-        .file-upload-label {
-            display: inline-block;
-            padding: 10px 20px;
-            background: #2b2b2b;
-            border: 1px solid #3a3a3a;
-            border-radius: 25px;
-            cursor: pointer;
-            color: white;
-            margin: 5px;
-        }
-        
-        .loading-text {
-            color: #888;
-            text-align: center;
-            padding: 20px;
+        ::-webkit-scrollbar-thumb:hover {
+            background: #3b3f48;
         }
     </style>
 </head>
@@ -740,17 +725,7 @@
 <div id="app"></div>
 
 <script>
-    const ADMIN_USERNAME = "SStwendRT";
-    let currentMessagesListener = null;
-    let isLoadingMore = false;
-    let hasMoreMessages = true;
-    let oldestMessageTimestamp = null;
-    let displayedMessagesSet = new Set();
-    let replyingTo = null; // { messageId, username, text }
-    let currentChannelId = null;
-    let currentUser = null;
-    let isAdmin = false;
-    
+    // Firebase конфигурация
     const firebaseConfig = {
         apiKey: "AIzaSyB9XzL1XzL1XzL1XzL1XzL1XzL1XzL1",
         authDomain: "ipsteal-4bf1c.firebaseapp.com",
@@ -763,22 +738,37 @@
     
     firebase.initializeApp(firebaseConfig);
     const database = firebase.database();
+    
+    // References
     const usersRef = database.ref('users');
-    const messagesRef = database.ref('channel_messages');
+    const messagesRef = database.ref('messages');
+    const friendsRef = database.ref('friends');
+    const friendRequestsRef = database.ref('friend_requests');
+    const pinnedMessagesRef = database.ref('pinned_messages');
+    const channelsRef = database.ref('channels');
     const bansRef = database.ref('bans');
     const mutesRef = database.ref('mutes');
-    const channelsRef = database.ref('channels');
     const rolesRef = database.ref('roles');
     const userRolesRef = database.ref('user_roles');
     
-    function getDirectGifUrl(url) {
-        if (url.includes('tenor.com')) {
-            const match = url.match(/\/view\/(?:[^-]+-)*([a-zA-Z0-9]+)/);
-            if (match && match[1]) {
-                return `https://media.tenor.com/${match[1]}/tenor.gif`;
-            }
-        }
-        return url;
+    const ADMIN_USERNAME = "SStwendRT";
+    let currentUser = null;
+    let currentChatType = 'server'; // 'server', 'dm'
+    let currentChatId = null;
+    let currentMessagesListener = null;
+    let isLoadingMore = false;
+    let hasMoreMessages = true;
+    let oldestMessageTimestamp = null;
+    let displayedMessagesSet = new Set();
+    let replyingTo = null;
+    let isAdmin = false;
+    
+    // Вспомогательные функции
+    function escapeHtml(text) {
+        if (!text) return '';
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
     }
     
     async function uploadFile(file) {
@@ -791,101 +781,17 @@
         });
     }
     
-    async function showImageUploadDialog() {
-        const { value: choice } = await Swal.fire({
-            title: 'Upload Image',
-            input: 'select',
-            inputOptions: {
-                'url': 'Paste URL',
-                'file': 'Upload File'
-            },
-            inputPlaceholder: 'Choose option',
-            showCancelButton: true,
-            confirmButtonText: 'Next',
-            cancelButtonText: 'Cancel'
-        });
-        
-        if (choice === 'url') {
-            const { value: url } = await Swal.fire({
-                title: 'Image URL',
-                input: 'url',
-                inputPlaceholder: 'https://example.com/image.jpg',
-                showCancelButton: true,
-                confirmButtonText: 'Send'
-            });
-            if (url) {
-                sendMessage(url, 'image');
-            }
-        } else if (choice === 'file') {
-            const { value: file } = await Swal.fire({
-                title: 'Select Image',
-                input: 'file',
-                inputAttributes: {
-                    'accept': 'image/*',
-                    'aria-label': 'Choose image'
-                },
-                showCancelButton: true,
-                confirmButtonText: 'Upload'
-            });
-            if (file) {
-                const imageUrl = await uploadFile(file);
-                sendMessage(imageUrl, 'image');
-            }
-        }
-    }
-    
-    async function showGifUploadDialog() {
-        const { value: choice } = await Swal.fire({
-            title: 'Upload GIF',
-            input: 'select',
-            inputOptions: {
-                'url': 'Paste GIF URL',
-                'file': 'Upload GIF File'
-            },
-            inputPlaceholder: 'Choose option',
-            showCancelButton: true,
-            confirmButtonText: 'Next',
-            cancelButtonText: 'Cancel'
-        });
-        
-        if (choice === 'url') {
-            const { value: url } = await Swal.fire({
-                title: 'GIF URL',
-                input: 'url',
-                inputPlaceholder: 'https://example.com/animation.gif or Tenor link',
-                showCancelButton: true,
-                confirmButtonText: 'Send'
-            });
-            if (url) {
-                const directUrl = getDirectGifUrl(url);
-                sendMessage(directUrl, 'gif');
-            }
-        } else if (choice === 'file') {
-            const { value: file } = await Swal.fire({
-                title: 'Select GIF',
-                input: 'file',
-                inputAttributes: {
-                    'accept': 'image/gif',
-                    'aria-label': 'Choose GIF'
-                },
-                showCancelButton: true,
-                confirmButtonText: 'Upload'
-            });
-            if (file) {
-                const gifUrl = await uploadFile(file);
-                sendMessage(gifUrl, 'gif');
-            }
-        }
-    }
-    
+    // Проверка прав доступа
     async function checkChannelPermissions(channelId, userId, action = 'send') {
         if (!channelId) return false;
         const channelSnapshot = await channelsRef.child(channelId).once('value');
         const channel = channelSnapshot.val();
         if (!channel) return action === 'send' ? false : true;
         if (channel.owner === userId) return true;
+        
         const userRoleSnapshot = await userRolesRef.child(userId).once('value');
         const userRoleId = userRoleSnapshot.val();
+        
         if (action === 'send') {
             if (!channel.allowedToSend || channel.allowedToSend === 'all') return true;
             if (channel.allowedToSend === 'roles' && userRoleId && channel.allowedRoles?.includes(userRoleId)) return true;
@@ -901,88 +807,445 @@
     }
     
     async function checkSlowmode(channelId, userId) {
-        if (!channelId) return true;
+        if (!channelId || currentChatType !== 'server') return true;
         const channelSnapshot = await channelsRef.child(channelId).once('value');
         const channel = channelSnapshot.val();
         if (!channel || !channel.slowmode || channel.slowmode === 0) return true;
-        const lastMsgSnapshot = await messagesRef.child(channelId).orderByChild('timestamp').limitToLast(1).once('value');
+        
+        const lastMsgSnapshot = await messagesRef.orderByChild('timestamp').limitToLast(1).once('value');
         let lastTime = 0;
         lastMsgSnapshot.forEach(msg => {
-            if (msg.val().userId === userId) {
+            if (msg.val().userId === userId && msg.val().chatType === 'server' && msg.val().chatId === channelId) {
                 lastTime = msg.val().timestamp;
             }
         });
+        
         const timeSince = Date.now() - lastTime;
         if (timeSince < channel.slowmode * 1000) {
             const waitSeconds = Math.ceil((channel.slowmode * 1000 - timeSince) / 1000);
-            Swal.fire('Slow Mode', `Please wait ${waitSeconds} seconds before sending another message`, 'warning');
+            Swal.fire('Slow Mode', `Please wait ${waitSeconds} seconds`, 'warning');
             return false;
         }
         return true;
     }
     
-    async function deleteMessage(messageId, messageUserId) {
-        const canDelete = isAdmin || messageUserId === currentUser.id;
-        if (!canDelete) {
-            Swal.fire('Error', 'You can only delete your own messages', 'error');
+    async function showImageUploadDialog() {
+        const { value: choice } = await Swal.fire({
+            title: 'Upload Image',
+            input: 'select',
+            inputOptions: { 'url': 'Paste URL', 'file': 'Upload File' },
+            showCancelButton: true,
+            confirmButtonText: 'Next'
+        });
+        
+        if (choice === 'url') {
+            const { value: url } = await Swal.fire({
+                title: 'Image URL',
+                input: 'url',
+                showCancelButton: true,
+                confirmButtonText: 'Send'
+            });
+            if (url) sendMessage(url, 'image');
+        } else if (choice === 'file') {
+            const { value: file } = await Swal.fire({
+                title: 'Select Image',
+                input: 'file',
+                inputAttributes: { 'accept': 'image/*' },
+                showCancelButton: true,
+                confirmButtonText: 'Upload'
+            });
+            if (file) {
+                const imageUrl = await uploadFile(file);
+                sendMessage(imageUrl, 'image');
+            }
+        }
+    }
+    
+    // Отправка сообщения
+    async function sendMessage(text, type = 'text') {
+        if (!text || !text.trim() || !currentUser) return;
+        
+        // Проверки для серверных чатов
+        if (currentChatType === 'server') {
+            const canSend = await checkChannelPermissions(currentChatId, currentUser.id, 'send');
+            if (!canSend) {
+                Swal.fire('Access Denied', 'You cannot send messages here', 'error');
+                return;
+            }
+            const slowmodeOk = await checkSlowmode(currentChatId, currentUser.id);
+            if (!slowmodeOk) return;
+        }
+        
+        // Проверка мута
+        const isMuted = await mutesRef.child(currentUser.id).once('value');
+        if (isMuted.exists()) {
+            const muteData = isMuted.val();
+            if (muteData.expiresAt > Date.now()) {
+                Swal.fire('Muted', 'You are muted', 'error');
+                return;
+            } else {
+                await mutesRef.child(currentUser.id).remove();
+            }
+        }
+        
+        const messageData = {
+            text: text.trim(),
+            username: currentUser.username,
+            displayName: currentUser.displayName,
+            avatar: currentUser.avatar,
+            userId: currentUser.id,
+            timestamp: Date.now(),
+            type: type,
+            chatType: currentChatType,
+            chatId: currentChatId
+        };
+        
+        if (replyingTo) {
+            messageData.replyTo = replyingTo.messageId;
+            messageData.replyToUsername = replyingTo.username;
+            messageData.replyToText = replyingTo.text;
+            cancelReply();
+        }
+        
+        const newMsgRef = messagesRef.push();
+        await newMsgRef.set(messageData);
+        
+        const input = document.getElementById('messageInput');
+        if (input) input.value = '';
+        scrollToBottom();
+    }
+    
+    // Создание элемента сообщения
+    async function createMessageElement(message, key) {
+        const messageDiv = document.createElement('div');
+        messageDiv.className = 'message';
+        messageDiv.setAttribute('data-key', key);
+        
+        const pinnedSnapshot = await pinnedMessagesRef.child(key).once('value');
+        if (pinnedSnapshot.exists()) {
+            messageDiv.classList.add('pinned');
+        }
+        
+        const timeStr = new Date(message.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        const avatarUrl = message.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(message.displayName)}&background=5865f2&color=white&size=40`;
+        
+        let roleBadge = '';
+        if (currentChatType === 'server') {
+            const roleSnapshot = await userRolesRef.child(message.userId).once('value');
+            if (roleSnapshot.exists()) {
+                const roleId = roleSnapshot.val();
+                const roleData = await rolesRef.child(roleId).once('value');
+                if (roleData.exists()) {
+                    roleBadge = `<span style="background: ${roleData.val().color}; padding: 2px 6px; border-radius: 4px; font-size: 10px;">${roleData.val().name}</span>`;
+                }
+            }
+        }
+        
+        let replyHtml = '';
+        if (message.replyTo) {
+            replyHtml = `
+                <div class="reply-preview">
+                    ↳ Replying to <strong>${escapeHtml(message.replyToUsername)}</strong>: ${escapeHtml(message.replyToText.substring(0, 80))}
+                </div>
+            `;
+        }
+        
+        let content = '';
+        if (message.type === 'image' || message.type === 'gif') {
+            content = `<img src="${escapeHtml(message.text)}" onclick="window.open('${escapeHtml(message.text)}', '_blank')" loading="lazy">`;
+        } else {
+            content = `<div class="message-text">${escapeHtml(message.text)}</div>`;
+        }
+        
+        const isOwn = message.userId === currentUser.id;
+        const canDelete = isAdmin || isOwn;
+        
+        messageDiv.innerHTML = `
+            <div class="message-content">
+                <div class="message-header">
+                    <span class="message-author" onclick="showUserProfile('${message.userId}')">${escapeHtml(message.displayName)}</span>
+                    ${roleBadge}
+                    <span class="message-timestamp">${timeStr}</span>
+                </div>
+                ${replyHtml}
+                ${content}
+            </div>
+            <div class="message-actions">
+                <button class="message-action-btn pin-btn" onclick="event.stopPropagation(); togglePinMessage('${key}', '${escapeHtml(message.text).replace(/'/g, "\\'")}', '${escapeHtml(message.displayName)}')">📌 Pin</button>
+                <button class="message-action-btn reply-btn" onclick="event.stopPropagation(); setReplyTo('${key}', '${escapeHtml(message.displayName)}', '${escapeHtml(message.text).replace(/'/g, "\\'")}')">↩️ Reply</button>
+                ${canDelete ? `<button class="message-action-btn delete-btn" onclick="event.stopPropagation(); deleteMessage('${key}')">🗑️ Delete</button>` : ''}
+            </div>
+        `;
+        
+        return messageDiv;
+    }
+    
+    async function togglePinMessage(messageId, messageText, authorName) {
+        const pinnedSnapshot = await pinnedMessagesRef.child(messageId).once('value');
+        
+        if (pinnedSnapshot.exists()) {
+            await pinnedMessagesRef.child(messageId).remove();
+            Swal.fire('Unpinned', 'Message removed from pinned', 'success');
+        } else {
+            await pinnedMessagesRef.child(messageId).set({
+                messageId: messageId,
+                text: messageText,
+                author: authorName,
+                pinnedBy: currentUser.username,
+                pinnedAt: Date.now(),
+                chatType: currentChatType,
+                chatId: currentChatId
+            });
+            Swal.fire('Pinned!', 'Message pinned to chat', 'success');
+        }
+        
+        const messageElement = document.querySelector(`.message[data-key="${messageId}"]`);
+        if (messageElement) {
+            if (await pinnedMessagesRef.child(messageId).once('value').then(s => s.exists())) {
+                messageElement.classList.add('pinned');
+            } else {
+                messageElement.classList.remove('pinned');
+            }
+        }
+    }
+    
+    async function showPinnedMessages() {
+        const snapshot = await pinnedMessagesRef.orderByChild('chatId').equalTo(currentChatId).once('value');
+        const pinnedMessages = [];
+        snapshot.forEach(child => {
+            const msg = child.val();
+            if (msg.chatType === currentChatType && msg.chatId === currentChatId) {
+                pinnedMessages.push(msg);
+            }
+        });
+        
+        if (pinnedMessages.length === 0) {
+            Swal.fire('No pinned messages', 'Pin a message to see it here', 'info');
             return;
         }
         
-        const result = await Swal.fire({
-            title: 'Delete Message?',
-            text: 'This action cannot be undone',
-            icon: 'warning',
+        let html = '<div class="pinned-messages">';
+        pinnedMessages.forEach(msg => {
+            html += `
+                <div class="pinned-message" onclick="scrollToMessage('${msg.messageId}')">
+                    <strong>${escapeHtml(msg.author)}</strong><br>
+                    <small>${escapeHtml(msg.text.substring(0, 100))}</small>
+                </div>
+            `;
+        });
+        html += '</div>';
+        
+        Swal.fire({
+            title: 'Pinned Messages',
+            html: html,
+            confirmButtonText: 'Close',
+            background: '#2b2d31',
+            color: 'white'
+        });
+    }
+    
+    // Система друзей
+    async function addFriend() {
+        const { value: username } = await Swal.fire({
+            title: 'Add Friend',
+            input: 'text',
+            inputPlaceholder: 'Enter username',
             showCancelButton: true,
-            confirmButtonText: 'Delete',
-            cancelButtonText: 'Cancel'
+            confirmButtonText: 'Send Request'
         });
         
-        if (result.isConfirmed) {
-            await messagesRef.child(currentChannelId).child(messageId).remove();
-            const messageElement = document.querySelector(`.message[data-key="${messageId}"]`);
-            if (messageElement) {
-                messageElement.remove();
+        if (username && username !== currentUser.username) {
+            const userSnapshot = await usersRef.orderByChild('username').equalTo(username).once('value');
+            if (!userSnapshot.exists()) {
+                Swal.fire('Error', 'User not found', 'error');
+                return;
             }
-            displayedMessagesSet.delete(messageId);
-            Swal.fire('Deleted', 'Message deleted', 'success');
+            
+            let targetUserId = null;
+            userSnapshot.forEach(child => {
+                targetUserId = child.key;
+            });
+            
+            const existingRequest = await friendRequestsRef.orderByChild('fromUserId').equalTo(currentUser.id).once('value');
+            let requestExists = false;
+            existingRequest.forEach(req => {
+                if (req.val().toUserId === targetUserId && req.val().status === 'pending') {
+                    requestExists = true;
+                }
+            });
+            
+            if (requestExists) {
+                Swal.fire('Info', 'Friend request already sent', 'info');
+                return;
+            }
+            
+            await friendRequestsRef.push({
+                fromUserId: currentUser.id,
+                fromUsername: currentUser.username,
+                toUserId: targetUserId,
+                toUsername: username,
+                status: 'pending',
+                timestamp: Date.now()
+            });
+            
+            Swal.fire('Success', `Friend request sent to ${username}`, 'success');
         }
     }
     
-    function setReplyTo(messageId, username, text) {
-        replyingTo = { messageId, username, text: text.substring(0, 100) };
-        const replyBar = document.getElementById('replyBar');
-        const replyText = document.getElementById('replyText');
-        if (replyBar && replyText) {
-            replyText.innerHTML = `Replying to <strong>${escapeHtml(username)}</strong>: ${escapeHtml(text.substring(0, 80))}${text.length > 80 ? '...' : ''}`;
-            replyBar.classList.add('active');
+    async function loadFriends() {
+        const friendsList = document.getElementById('friendsList');
+        if (!friendsList) return;
+        
+        friendsList.innerHTML = '<div style="padding: 12px; color: #949ba4;">Loading...</div>';
+        
+        const acceptedSnapshot = await friendsRef.orderByChild('userId').equalTo(currentUser.id).once('value');
+        const friends = [];
+        
+        for (const child of Object.values(acceptedSnapshot.val() || {})) {
+            const friendId = child.friendId;
+            const friendData = await usersRef.child(friendId).once('value');
+            if (friendData.exists()) {
+                friends.push({
+                    id: friendId,
+                    username: friendData.val().username,
+                    displayName: friendData.val().displayName,
+                    avatar: friendData.val().avatar
+                });
+            }
         }
-        document.getElementById('messageInput').focus();
+        
+        friendsList.innerHTML = '';
+        if (friends.length === 0) {
+            friendsList.innerHTML = '<div style="padding: 12px; color: #949ba4; text-align: center;">No friends yet<br>Add some!</div>';
+            return;
+        }
+        
+        friends.forEach(friend => {
+            const friendDiv = document.createElement('div');
+            friendDiv.className = 'friend-item';
+            friendDiv.onclick = () => startDM(friend.id, friend.displayName || friend.username);
+            const avatarUrl = friend.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(friend.displayName)}&background=5865f2&color=white&size=32`;
+            friendDiv.innerHTML = `
+                <img class="friend-avatar" src="${avatarUrl}">
+                <div class="friend-info">
+                    <div class="friend-name">${escapeHtml(friend.displayName || friend.username)}</div>
+                    <div class="friend-status status-online">● Online</div>
+                </div>
+            `;
+            friendsList.appendChild(friendDiv);
+        });
     }
     
-    function cancelReply() {
-        replyingTo = null;
-        const replyBar = document.getElementById('replyBar');
-        if (replyBar) {
-            replyBar.classList.remove('active');
+    async function startDM(userId, displayName) {
+        if (currentMessagesListener) {
+            messagesRef.off('child_added', currentMessagesListener);
         }
+        
+        currentChatType = 'dm';
+        currentChatId = userId;
+        cancelReply();
+        
+        document.getElementById('channelName').textContent = `@ ${displayName}`;
+        document.getElementById('channelTopic').textContent = 'Direct Message';
+        document.getElementById('slowmodeIndicator').style.display = 'none';
+        
+        await loadMessages();
+        
+        currentMessagesListener = messagesRef.orderByChild('timestamp').startAt(Date.now()).on('child_added', async (snapshot) => {
+            const message = snapshot.val();
+            if (displayedMessagesSet.has(snapshot.key)) return;
+            if (message.chatType === 'dm' && 
+                ((message.chatId === currentUser.id && message.userId === currentChatId) ||
+                 (message.chatId === currentChatId && message.userId === currentUser.id))) {
+                await displayMessage(message, snapshot.key);
+            }
+        });
+        
+        document.querySelectorAll('.friend-item, .dm-item, .channel-item').forEach(el => el.classList.remove('active'));
+    }
+    
+    // Загрузка сообщений
+    async function loadMessages() {
+        const messagesContainer = document.getElementById('chatMessages');
+        if (!messagesContainer) return;
+        
+        messagesContainer.innerHTML = '<div class="loading-text" style="color: #949ba4; text-align: center;">Loading messages...</div>';
+        displayedMessagesSet.clear();
+        hasMoreMessages = true;
+        oldestMessageTimestamp = null;
+        
+        const snapshot = await messagesRef.orderByChild('timestamp').limitToLast(50).once('value');
+        const messages = [];
+        
+        snapshot.forEach(child => {
+            const msg = child.val();
+            if (currentChatType === 'dm') {
+                if ((msg.chatId === currentUser.id && msg.userId === currentChatId) ||
+                    (msg.chatId === currentChatId && msg.userId === currentUser.id)) {
+                    messages.push({ key: child.key, ...msg });
+                }
+            } else if (msg.chatType === 'server' && msg.chatId === currentChatId) {
+                messages.push({ key: child.key, ...msg });
+            }
+        });
+        
+        messages.sort((a, b) => a.timestamp - b.timestamp);
+        
+        messagesContainer.innerHTML = '';
+        
+        const loaderDiv = document.createElement('div');
+        loaderDiv.id = 'messagesLoader';
+        loaderDiv.className = 'messages-loader';
+        loaderDiv.textContent = 'Loading older messages...';
+        messagesContainer.appendChild(loaderDiv);
+        
+        for (const msg of messages) {
+            const msgDiv = await createMessageElement(msg, msg.key);
+            messagesContainer.appendChild(msgDiv);
+            displayedMessagesSet.add(msg.key);
+        }
+        
+        if (messages.length > 0) {
+            oldestMessageTimestamp = messages[0]?.timestamp;
+        }
+        
+        scrollToBottom();
+        setupInfiniteScroll();
+    }
+    
+    async function displayMessage(message, key) {
+        if (displayedMessagesSet.has(key)) return;
+        const messagesContainer = document.getElementById('chatMessages');
+        if (!messagesContainer) return;
+        
+        const messageDiv = await createMessageElement(message, key);
+        messagesContainer.appendChild(messageDiv);
+        displayedMessagesSet.add(key);
+        scrollToBottom();
     }
     
     async function loadMoreMessages() {
-        if (!currentChannelId || isLoadingMore || !hasMoreMessages) return;
+        if (isLoadingMore || !hasMoreMessages || !oldestMessageTimestamp) return;
         isLoadingMore = true;
         const loader = document.getElementById('messagesLoader');
         if (loader) loader.classList.add('active');
         
         try {
-            let query = messagesRef.child(currentChannelId).orderByChild('timestamp');
-            if (oldestMessageTimestamp) {
-                query = query.endAt(oldestMessageTimestamp - 1);
-            }
-            const snapshot = await query.limitToLast(21).once('value');
+            const snapshot = await messagesRef.orderByChild('timestamp').endAt(oldestMessageTimestamp - 1).limitToLast(30).once('value');
             const messages = [];
+            
             snapshot.forEach(child => {
-                messages.push({ key: child.key, ...child.val() });
+                const msg = child.val();
+                if (currentChatType === 'dm') {
+                    if ((msg.chatId === currentUser.id && msg.userId === currentChatId) ||
+                        (msg.chatId === currentChatId && msg.userId === currentUser.id)) {
+                        messages.push({ key: child.key, ...msg });
+                    }
+                } else if (msg.chatType === 'server' && msg.chatId === currentChatId) {
+                    messages.push({ key: child.key, ...msg });
+                }
             });
+            
             messages.sort((a, b) => a.timestamp - b.timestamp);
             
             if (messages.length === 0) {
@@ -992,23 +1255,14 @@
                 return;
             }
             
-            let newMessages = messages;
-            if (messages.length > 20) {
-                newMessages = messages.slice(0, -1);
-                oldestMessageTimestamp = messages[messages.length - 1].timestamp;
-            } else {
-                oldestMessageTimestamp = messages[0]?.timestamp;
-                if (messages.length < 20) hasMoreMessages = false;
-            }
-            
             const messagesContainer = document.getElementById('chatMessages');
             const scrollHeightBefore = messagesContainer.scrollHeight;
             const scrollTopBefore = messagesContainer.scrollTop;
             
-            for (let i = newMessages.length - 1; i >= 0; i--) {
-                const msg = newMessages[i];
+            for (let i = messages.length - 1; i >= 0; i--) {
+                const msg = messages[i];
                 if (!displayedMessagesSet.has(msg.key)) {
-                    const messageDiv = await createMessageElement(msg);
+                    const messageDiv = await createMessageElement(msg, msg.key);
                     if (messagesContainer.firstChild) {
                         messagesContainer.insertBefore(messageDiv, messagesContainer.firstChild);
                     } else {
@@ -1018,11 +1272,9 @@
                 }
             }
             
+            oldestMessageTimestamp = messages[0]?.timestamp;
             const newScrollHeight = messagesContainer.scrollHeight;
-            const heightDiff = newScrollHeight - scrollHeightBefore;
-            if (heightDiff > 0) {
-                messagesContainer.scrollTop = scrollTopBefore + heightDiff;
-            }
+            messagesContainer.scrollTop = scrollTopBefore + (newScrollHeight - scrollHeightBefore);
             
         } catch (err) {
             console.error('Error loading more messages:', err);
@@ -1037,7 +1289,7 @@
         if (!messagesContainer) return;
         
         const onScroll = () => {
-            if (messagesContainer.scrollTop <= 50 && !isLoadingMore && hasMoreMessages && currentChannelId) {
+            if (messagesContainer.scrollTop <= 100 && !isLoadingMore && hasMoreMessages) {
                 loadMoreMessages();
             }
         };
@@ -1045,163 +1297,59 @@
         messagesContainer.addEventListener('scroll', onScroll);
     }
     
-    async function createMessageElement(message) {
-        const messageDiv = document.createElement('div');
-        const isOwn = message.userId === currentUser.id;
-        messageDiv.className = `message ${isOwn ? 'sent' : 'received'} ${message.type !== 'text' ? 'media-message' : ''}`;
-        messageDiv.setAttribute('data-key', message.key);
-        
-        let timeStr = 'just now';
-        if (message.timestamp) {
-            const date = new Date(message.timestamp);
-            timeStr = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-        }
-        
-        let userRole = '';
-        const roleSnapshot = await userRolesRef.child(message.userId).once('value');
-        if (roleSnapshot.exists()) {
-            const roleId = roleSnapshot.val();
-            const roleData = await rolesRef.child(roleId).once('value');
-            if (roleData.exists()) {
-                userRole = `<span class="role-badge" style="background: ${roleData.val().color};">${roleData.val().name}</span>`;
-            }
-        }
-        
-        const displayName = message.displayName || message.username;
-        const avatarUrl = message.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(displayName)}&background=2b2b2b&color=white&size=24`;
-        
-        let replyHtml = '';
-        if (message.replyTo) {
-            replyHtml = `
-                <div class="reply-preview">
-                    <span>↳ Reply to <strong>${escapeHtml(message.replyToUsername)}</strong>: ${escapeHtml(message.replyToText)}</span>
-                </div>
-            `;
-        }
-        
-        let content = '';
-        if (message.type === 'image' || message.type === 'gif') {
-            content = `<img src="${escapeHtml(message.text)}" onclick="window.open('${escapeHtml(message.text)}', '_blank')" style="max-width: 300px; max-height: 300px; border-radius: 10px; cursor: pointer;" onerror="this.src='https://placehold.co/300x200/2b2b2b/white?text=Failed+to+load'">`;
-        } else {
-            content = `<div class="message-text">${escapeHtml(message.text)}</div>`;
-        }
-        
-        const canDelete = isAdmin || message.userId === currentUser.id;
-        
-        messageDiv.innerHTML = `
-            <div class="message-info">
-                <img class="message-avatar" src="${avatarUrl}" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(displayName)}&background=2b2b2b&color=white&size=24'">
-                <span>${escapeHtml(displayName)}</span>
-                ${userRole}
-                <span>• ${timeStr}</span>
-            </div>
-            ${replyHtml}
-            ${content}
-            <div class="message-actions">
-                <button class="message-action-btn reply-btn" onclick="event.stopPropagation(); setReplyTo('${message.key}', '${escapeHtml(displayName)}', '${escapeHtml(message.text).replace(/'/g, "\\'")}')">↩️ Reply</button>
-                ${canDelete ? `<button class="message-action-btn delete-btn" onclick="event.stopPropagation(); deleteMessage('${message.key}', '${message.userId}')">🗑️ Delete</button>` : ''}
-            </div>
-        `;
-        return messageDiv;
-    }
-    
-    async function displayMessage(message, key) {
-        if (displayedMessagesSet.has(key)) return;
+    function scrollToBottom() {
         const messagesContainer = document.getElementById('chatMessages');
-        if (!messagesContainer) return;
-        
-        const messageDiv = await createMessageElement(message);
-        messagesContainer.appendChild(messageDiv);
-        displayedMessagesSet.add(key);
-        scrollToBottom();
-    }
-    
-    async function loadInitialMessages(channelId) {
-        if (!channelId) return;
-        const messagesContainer = document.getElementById('chatMessages');
-        if (!messagesContainer) return;
-        
-        messagesContainer.innerHTML = '<div class="loading-text">Loading messages...</div>';
-        displayedMessagesSet.clear();
-        hasMoreMessages = true;
-        oldestMessageTimestamp = null;
-        
-        try {
-            const snapshot = await messagesRef.child(channelId).orderByChild('timestamp').limitToLast(20).once('value');
-            const messages = [];
-            snapshot.forEach(child => {
-                messages.push({ key: child.key, ...child.val() });
-            });
-            messages.sort((a, b) => a.timestamp - b.timestamp);
-            
-            messagesContainer.innerHTML = '';
-            
-            const loaderDiv = document.createElement('div');
-            loaderDiv.id = 'messagesLoader';
-            loaderDiv.className = 'messages-loader';
-            loaderDiv.textContent = 'Loading older messages...';
-            messagesContainer.appendChild(loaderDiv);
-            
-            for (const msg of messages) {
-                const msgDiv = await createMessageElement(msg);
-                messagesContainer.appendChild(msgDiv);
-                displayedMessagesSet.add(msg.key);
-            }
-            
-            if (messages.length > 0) {
-                oldestMessageTimestamp = messages[0]?.timestamp;
-                if (messages.length < 20) hasMoreMessages = false;
-            } else {
-                hasMoreMessages = false;
-            }
-            
-            scrollToBottom();
-            setupInfiniteScroll();
-        } catch (error) {
-            console.error('Error loading initial messages:', error);
-            messagesContainer.innerHTML = '<div class="loading-text">Error loading messages</div>';
+        if (messagesContainer) {
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
         }
     }
     
-    async function switchChannel(channelId) {
-        if (!channelId) return;
-        
-        const canView = await checkChannelPermissions(channelId, currentUser.id, 'view');
-        if (!canView) {
-            Swal.fire('Access Denied', 'You do not have permission to view this channel', 'error');
-            return;
-        }
-        
-        if (currentMessagesListener && currentChannelId) {
-            messagesRef.child(currentChannelId).off('child_added', currentMessagesListener);
-        }
-        
-        currentChannelId = channelId;
-        cancelReply();
-        await loadInitialMessages(channelId);
-        
-        currentMessagesListener = messagesRef.child(channelId).orderByChild('timestamp').startAt(Date.now()).on('child_added', async function(snapshot) {
-            const message = snapshot.val();
-            const messageKey = snapshot.key;
-            if (displayedMessagesSet.has(messageKey)) return;
-            const canViewMsg = await checkChannelPermissions(message.channelId, currentUser.id, 'view');
-            if (!canViewMsg) return;
-            await displayMessage(message, messageKey);
+    async function deleteMessage(messageId) {
+        const result = await Swal.fire({
+            title: 'Delete Message?',
+            text: 'This action cannot be undone',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Delete'
         });
         
-        await loadChannelsSidebar();
-        updateChannelName();
+        if (result.isConfirmed) {
+            await messagesRef.child(messageId).remove();
+            await pinnedMessagesRef.child(messageId).remove();
+            const messageElement = document.querySelector(`.message[data-key="${messageId}"]`);
+            if (messageElement) messageElement.remove();
+            displayedMessagesSet.delete(messageId);
+            Swal.fire('Deleted', 'Message deleted', 'success');
+        }
     }
     
-    async function loadChannelsSidebar() {
+    function setReplyTo(messageId, username, text) {
+        replyingTo = { messageId, username, text };
+        const replyBar = document.getElementById('replyBar');
+        const replyText = document.getElementById('replyText');
+        if (replyBar && replyText) {
+            replyText.innerHTML = `Replying to <strong>${escapeHtml(username)}</strong>: ${escapeHtml(text.substring(0, 80))}`;
+            replyBar.classList.add('active');
+        }
+        document.getElementById('messageInput').focus();
+    }
+    
+    function cancelReply() {
+        replyingTo = null;
+        const replyBar = document.getElementById('replyBar');
+        if (replyBar) replyBar.classList.remove('active');
+    }
+    
+    // Каналы и серверы
+    async function loadChannels() {
         const channelsList = document.getElementById('channelsList');
         if (!channelsList) return;
-        channelsList.innerHTML = '<div class="loading-text">Loading channels...</div>';
+        
         const snapshot = await channelsRef.once('value');
         channelsList.innerHTML = '';
+        
         if (!snapshot.exists()) {
-            const defaultChannelRef = channelsRef.push();
-            await defaultChannelRef.set({
+            const defaultChannel = await channelsRef.push({
                 name: 'general',
                 displayName: 'General',
                 createdBy: 'system',
@@ -1211,8 +1359,8 @@
                 allowedToSend: 'all',
                 slowmode: 0
             });
-            if (!currentChannelId) currentChannelId = defaultChannelRef.key;
         }
+        
         const channels = [];
         snapshot.forEach(child => {
             channels.push({ id: child.key, ...child.val() });
@@ -1223,270 +1371,78 @@
             const canView = await checkChannelPermissions(channel.id, currentUser.id, 'view');
             if (canView) {
                 const channelDiv = document.createElement('div');
-                channelDiv.className = `channel-item ${currentChannelId === channel.id ? 'active' : ''}`;
-                channelDiv.textContent = `# ${channel.displayName || channel.name}`;
-                channelDiv.onclick = (function(id) {
-                    return function() { switchChannel(id); };
-                })(channel.id);
+                channelDiv.className = `channel-item ${currentChatType === 'server' && currentChatId === channel.id ? 'active' : ''}`;
+                channelDiv.innerHTML = `# ${escapeHtml(channel.displayName || channel.name)}`;
+                channelDiv.onclick = () => switchToServerChannel(channel.id, channel.displayName);
                 channelsList.appendChild(channelDiv);
             }
         }
         
-        if (!currentChannelId && channels.length > 0) {
+        if (currentChatType === 'server' && !currentChatId && channels.length > 0) {
             for (const channel of channels) {
                 if (await checkChannelPermissions(channel.id, currentUser.id, 'view')) {
-                    await switchChannel(channel.id);
+                    await switchToServerChannel(channel.id, channel.displayName);
                     break;
                 }
             }
         }
-        if (currentChannelId) updateChannelName();
     }
     
-    function updateChannelName() {
-        if (!currentChannelId) return;
-        channelsRef.child(currentChannelId).once('value', (snapshot) => {
-            const channel = snapshot.val();
-            if (channel) {
-                document.getElementById('channelName').textContent = `# ${channel.displayName || channel.name}`;
-                updateSlowmodeIndicator();
+    async function switchToServerChannel(channelId, channelName) {
+        if (currentMessagesListener) {
+            messagesRef.off('child_added', currentMessagesListener);
+        }
+        
+        currentChatType = 'server';
+        currentChatId = channelId;
+        cancelReply();
+        
+        document.getElementById('channelName').textContent = `# ${channelName}`;
+        document.getElementById('channelTopic').textContent = 'Text Channel';
+        
+        const channelSnapshot = await channelsRef.child(channelId).once('value');
+        const channel = channelSnapshot.val();
+        if (channel && channel.slowmode && channel.slowmode > 0) {
+            document.getElementById('slowmodeIndicator').style.display = 'inline';
+            document.getElementById('slowmodeIndicator').textContent = `Slow Mode: ${channel.slowmode}s`;
+        } else {
+            document.getElementById('slowmodeIndicator').style.display = 'none';
+        }
+        
+        await loadMessages();
+        
+        currentMessagesListener = messagesRef.orderByChild('timestamp').startAt(Date.now()).on('child_added', async (snapshot) => {
+            const message = snapshot.val();
+            if (displayedMessagesSet.has(snapshot.key)) return;
+            if (message.chatType === 'server' && message.chatId === currentChatId) {
+                const canView = await checkChannelPermissions(currentChatId, currentUser.id, 'view');
+                if (canView) {
+                    await displayMessage(message, snapshot.key);
+                }
             }
+        });
+        
+        document.querySelectorAll('.channel-item, .friend-item, .dm-item').forEach(el => el.classList.remove('active'));
+        document.querySelectorAll('.channel-item').forEach(el => {
+            if (el.textContent.includes(channelName)) el.classList.add('active');
         });
     }
     
-    function updateSlowmodeIndicator() {
-        const indicator = document.getElementById('slowmodeIndicator');
-        if (!indicator || !currentChannelId) return;
-        channelsRef.child(currentChannelId).once('value', (snapshot) => {
-            const channel = snapshot.val();
-            if (channel && channel.slowmode && channel.slowmode > 0) {
-                indicator.textContent = `Slow Mode: ${channel.slowmode}s`;
-                indicator.style.display = 'inline';
-            } else {
-                indicator.style.display = 'none';
-            }
-        });
-    }
-    
-    async function sendMessage(text, type = 'text') {
-        if (!text || !text.trim() || !currentUser || !currentChannelId) return;
-        const canSend = await checkChannelPermissions(currentChannelId, currentUser.id, 'send');
-        if (!canSend) {
-            Swal.fire('Access Denied', 'You do not have permission to send messages in this channel', 'error');
+    // Админ панель
+    async function showAdminPanel() {
+        if (!isAdmin) {
+            Swal.fire('Error', 'Admin access required', 'error');
             return;
         }
-        const slowmodeOk = await checkSlowmode(currentChannelId, currentUser.id);
-        if (!slowmodeOk) return;
-        const isMuted = await mutesRef.child(currentUser.id).once('value');
-        if (isMuted.exists()) {
-            const muteData = isMuted.val();
-            if (muteData.expiresAt > Date.now()) {
-                Swal.fire('Error', 'You are muted and cannot send messages', 'error');
-                return;
-            } else {
-                await mutesRef.child(currentUser.id).remove();
-            }
-        }
-        const sendBtn = document.getElementById('sendButton');
-        if (sendBtn) sendBtn.disabled = true;
-        try {
-            const userData = await usersRef.child(currentUser.id).once('value');
-            const userInfo = userData.val();
-            const message = {
-                text: text.trim(),
-                username: currentUser.username,
-                displayName: userInfo.displayName || currentUser.username,
-                avatar: userInfo.avatar || null,
-                userId: currentUser.id,
-                timestamp: Date.now(),
-                type: type,
-                channelId: currentChannelId
-            };
-            
-            if (replyingTo) {
-                message.replyTo = replyingTo.messageId;
-                message.replyToUsername = replyingTo.username;
-                message.replyToText = replyingTo.text;
-                cancelReply();
-            }
-            
-            await messagesRef.child(currentChannelId).push(message);
-            const input = document.getElementById('messageInput');
-            if (input) input.value = '';
-        } catch (error) {
-            console.error('Send error:', error);
-        } finally {
-            if (sendBtn) sendBtn.disabled = false;
-        }
+        document.getElementById('adminModal').style.display = 'block';
+        await loadAdminData();
     }
     
-    function scrollToBottom() {
-        const messagesContainer = document.getElementById('chatMessages');
-        if (messagesContainer) {
-            messagesContainer.scrollTop = messagesContainer.scrollHeight;
-        }
+    async function loadAdminData() {
+        await loadUsersList();
+        await loadRolesList();
+        await loadChannelsList();
     }
-    
-    function escapeHtml(text) {
-        if (!text) return '';
-        const div = document.createElement('div');
-        div.textContent = text;
-        return div.innerHTML;
-    }
-    
-    async function loadMembers() {
-        const membersList = document.getElementById('membersList');
-        if (!membersList) return;
-        membersList.innerHTML = '<div class="loading-text">Loading...</div>';
-        const snapshot = await usersRef.once('value');
-        membersList.innerHTML = '';
-        const users = [];
-        snapshot.forEach(child => {
-            users.push({
-                id: child.key,
-                username: child.val().username,
-                displayName: child.val().displayName,
-                avatar: child.val().avatar
-            });
-        });
-        for (const user of users) {
-            let roleHtml = '';
-            const roleSnapshot = await userRolesRef.child(user.id).once('value');
-            if (roleSnapshot.exists()) {
-                const roleId = roleSnapshot.val();
-                const roleData = await rolesRef.child(roleId).once('value');
-                if (roleData.exists()) {
-                    roleHtml = `<span class="member-role" style="background: ${roleData.val().color};">${roleData.val().name}</span>`;
-                }
-            }
-            const displayName = user.displayName || user.username;
-            const avatarUrl = user.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(displayName)}&background=2b2b2b&color=white&size=32`;
-            const memberDiv = document.createElement('div');
-            memberDiv.className = 'member-item';
-            memberDiv.onclick = () => showUserProfile(user.id);
-            memberDiv.innerHTML = `
-                <img class="member-avatar" src="${avatarUrl}" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(displayName)}&background=2b2b2b&color=white&size=32'">
-                <div class="member-name">${escapeHtml(displayName)} ${user.username === ADMIN_USERNAME ? '👑' : ''}</div>
-                ${roleHtml}
-            `;
-            membersList.appendChild(memberDiv);
-        }
-    }
-    
-    function showProfileModal() {
-        Swal.fire({
-            title: 'Edit Profile',
-            html: `
-                <div class="profile-preview">
-                    <img id="avatarPreview" class="profile-avatar-preview" src="${currentUser.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(currentUser.displayName || currentUser.username)}&background=2b2b2b&color=white&size=100`}">
-                    <button class="file-upload-label" onclick="window.showAvatarUploadDialog()">Change Avatar</button>
-                </div>
-                <input id="displayNameInput" class="profile-input" placeholder="Display Name" value="${escapeHtml(currentUser.displayName || currentUser.username)}">
-            `,
-            showCancelButton: true,
-            confirmButtonText: 'Save',
-            cancelButtonText: 'Cancel',
-            preConfirm: () => {
-                const displayName = document.getElementById('displayNameInput').value.trim();
-                if (!displayName) {
-                    Swal.showValidationMessage('Display name is required');
-                    return false;
-                }
-                return { displayName };
-            }
-        }).then(async (result) => {
-            if (result.value) {
-                await usersRef.child(currentUser.id).update({
-                    displayName: result.value.displayName
-                });
-                currentUser.displayName = result.value.displayName;
-                Swal.fire('Success', 'Profile updated', 'success');
-                renderMainApp();
-            }
-        });
-    }
-    
-    async function showAvatarUploadDialog() {
-        const { value: choice } = await Swal.fire({
-            title: 'Upload Avatar',
-            input: 'select',
-            inputOptions: {
-                'url': 'Paste URL',
-                'file': 'Upload File'
-            },
-            inputPlaceholder: 'Choose option',
-            showCancelButton: true,
-            confirmButtonText: 'Next',
-            cancelButtonText: 'Cancel'
-        });
-        if (choice === 'url') {
-            const { value: url } = await Swal.fire({
-                title: 'Avatar URL',
-                input: 'url',
-                inputPlaceholder: 'https://example.com/avatar.jpg',
-                showCancelButton: true,
-                confirmButtonText: 'Save'
-            });
-            if (url) {
-                await usersRef.child(currentUser.id).update({ avatar: url });
-                currentUser.avatar = url;
-                Swal.fire('Success', 'Avatar updated', 'success');
-                renderMainApp();
-            }
-        } else if (choice === 'file') {
-            const { value: file } = await Swal.fire({
-                title: 'Select Image',
-                input: 'file',
-                inputAttributes: {
-                    'accept': 'image/*',
-                    'aria-label': 'Choose image'
-                },
-                showCancelButton: true,
-                confirmButtonText: 'Upload'
-            });
-            if (file) {
-                const avatarUrl = await uploadFile(file);
-                await usersRef.child(currentUser.id).update({ avatar: avatarUrl });
-                currentUser.avatar = avatarUrl;
-                Swal.fire('Success', 'Avatar updated', 'success');
-                renderMainApp();
-            }
-        }
-    }
-    
-    async function showUserProfile(userId) {
-        const userSnapshot = await usersRef.child(userId).once('value');
-        const user = userSnapshot.val();
-        if (!user) return;
-        const displayName = user.displayName || user.username;
-        const avatarUrl = user.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(displayName)}&background=2b2b2b&color=white&size=100`;
-        let roleText = '';
-        const roleSnapshot = await userRolesRef.child(userId).once('value');
-        if (roleSnapshot.exists()) {
-            const roleId = roleSnapshot.val();
-            const roleData = await rolesRef.child(roleId).once('value');
-            if (roleData.exists()) {
-                roleText = `<div style="margin-top: 10px; padding: 5px 10px; background: ${roleData.val().color}; border-radius: 5px; display: inline-block;">Role: ${roleData.val().name}</div>`;
-            }
-        }
-        Swal.fire({
-            title: displayName,
-            html: `
-                <div style="text-align: center;">
-                    <img src="${avatarUrl}" style="width: 100px; height: 100px; border-radius: 50%; margin-bottom: 15px;" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(displayName)}&background=2b2b2b&color=white&size=100'">
-                    <div><strong>Username:</strong> ${escapeHtml(user.username)}</div>
-                    ${roleText}
-                </div>
-            `,
-            confirmButtonText: 'Close',
-            background: '#0a0a0a',
-            color: 'white'
-        });
-    }
-    
-    function showAdminPanel() { if (!isAdmin) { Swal.fire('Error', 'No admin permissions', 'error'); return; } document.getElementById('adminModal').style.display = 'block'; loadAdminData(); }
-    
-    async function loadAdminData() { await loadUsersList(); await loadRolesList(); await loadChannelsList(); }
     
     async function loadUsersList() {
         const usersList = document.getElementById('usersList');
@@ -1496,11 +1452,16 @@
         usersList.innerHTML = '';
         snapshot.forEach(child => {
             const user = child.val();
-            const displayName = user.displayName || user.username;
-            const userDiv = document.createElement('div');
-            userDiv.className = 'user-item';
-            userDiv.innerHTML = `<span>${escapeHtml(displayName)} (${escapeHtml(user.username)}) ${user.username === ADMIN_USERNAME ? '👑' : ''}</span><div><button class="ban-btn" onclick="banUser('${child.key}', '${escapeHtml(user.username)}')">Ban</button><button class="mute-btn" onclick="muteUser('${child.key}', '${escapeHtml(user.username)}')">Mute</button><button class="edit-btn" onclick="assignRole('${child.key}', '${escapeHtml(user.username)}')">Role</button></div>`;
-            usersList.appendChild(userDiv);
+            usersList.innerHTML += `
+                <div class="user-item">
+                    <span>${escapeHtml(user.displayName || user.username)} (${escapeHtml(user.username)})</span>
+                    <div>
+                        <button class="ban-btn" onclick="banUser('${child.key}')">Ban</button>
+                        <button class="mute-btn" onclick="muteUser('${child.key}')">Mute</button>
+                        <button class="edit-btn" onclick="assignRole('${child.key}')">Role</button>
+                    </div>
+                </div>
+            `;
         });
     }
     
@@ -1512,10 +1473,15 @@
         rolesList.innerHTML = '';
         snapshot.forEach(child => {
             const role = child.val();
-            const roleDiv = document.createElement('div');
-            roleDiv.className = 'role-item';
-            roleDiv.innerHTML = `<span style="color: ${role.color};">${escapeHtml(role.name)}</span><div><button class="edit-btn" onclick="editRole('${child.key}', '${escapeHtml(role.name)}', '${role.color}')">Edit</button><button class="delete-btn" onclick="deleteRole('${child.key}')">Delete</button></div>`;
-            rolesList.appendChild(roleDiv);
+            rolesList.innerHTML += `
+                <div class="role-item">
+                    <span style="color: ${role.color};">${escapeHtml(role.name)}</span>
+                    <div>
+                        <button class="edit-btn" onclick="editRole('${child.key}')">Edit</button>
+                        <button class="delete-btn" onclick="deleteRole('${child.key}')">Delete</button>
+                    </div>
+                </div>
+            `;
         });
     }
     
@@ -1527,16 +1493,22 @@
         channelsList.innerHTML = '';
         snapshot.forEach(child => {
             const channel = child.val();
-            const channelDiv = document.createElement('div');
-            channelDiv.className = 'channel-item-admin';
-            channelDiv.innerHTML = `<span># ${escapeHtml(channel.displayName || channel.name)}</span><div><button class="config-btn" onclick="configureChannel('${child.key}', '${escapeHtml(channel.displayName || channel.name)}')">⚙️</button><button class="edit-btn" onclick="editChannel('${child.key}', '${escapeHtml(channel.displayName || channel.name)}')">Edit</button><button class="delete-btn" onclick="deleteChannel('${child.key}')">Delete</button></div>`;
-            channelsList.appendChild(channelDiv);
+            channelsList.innerHTML += `
+                <div class="channel-item-admin">
+                    <span># ${escapeHtml(channel.displayName || channel.name)}</span>
+                    <div>
+                        <button class="config-btn" onclick="configureChannel('${child.key}')">⚙️</button>
+                        <button class="edit-btn" onclick="editChannel('${child.key}')">Edit</button>
+                        <button class="delete-btn" onclick="deleteChannel('${child.key}')">Delete</button>
+                    </div>
+                </div>
+            `;
         });
     }
     
-    async function banUser(userId, username) {
+    async function banUser(userId) {
         const { value: duration } = await Swal.fire({
-            title: `Ban ${username}`,
+            title: 'Ban User',
             input: 'select',
             inputOptions: {
                 'permanent': 'Permanent',
@@ -1545,25 +1517,22 @@
                 '604800000': '1 week'
             },
             showCancelButton: true,
-            confirmButtonText: 'Ban',
-            cancelButtonText: 'Cancel'
+            confirmButtonText: 'Ban'
         });
         if (duration) {
-            const banData = {
+            await bansRef.child(userId).set({
                 userId,
-                username,
                 bannedBy: currentUser.username,
                 timestamp: Date.now(),
                 expiresAt: duration === 'permanent' ? null : Date.now() + parseInt(duration)
-            };
-            await bansRef.child(userId).set(banData);
-            Swal.fire('Success', `${username} banned`, 'success');
+            });
+            Swal.fire('Success', 'User banned', 'success');
         }
     }
     
-    async function muteUser(userId, username) {
+    async function muteUser(userId) {
         const { value: duration } = await Swal.fire({
-            title: `Mute ${username}`,
+            title: 'Mute User',
             input: 'select',
             inputOptions: {
                 '600000': '10 minutes',
@@ -1571,23 +1540,20 @@
                 '86400000': '1 day'
             },
             showCancelButton: true,
-            confirmButtonText: 'Mute',
-            cancelButtonText: 'Cancel'
+            confirmButtonText: 'Mute'
         });
         if (duration) {
-            const muteData = {
+            await mutesRef.child(userId).set({
                 userId,
-                username,
                 mutedBy: currentUser.username,
                 timestamp: Date.now(),
                 expiresAt: Date.now() + parseInt(duration)
-            };
-            await mutesRef.child(userId).set(muteData);
-            Swal.fire('Success', `${username} muted`, 'success');
+            });
+            Swal.fire('Success', 'User muted', 'success');
         }
     }
     
-    async function assignRole(userId, username) {
+    async function assignRole(userId) {
         const rolesSnapshot = await rolesRef.once('value');
         const roles = [];
         rolesSnapshot.forEach(child => {
@@ -1598,27 +1564,24 @@
             return;
         }
         const { value: roleId } = await Swal.fire({
-            title: `Assign role to ${username}`,
+            title: 'Assign Role',
             input: 'select',
             inputOptions: Object.fromEntries(roles.map(r => [r.id, r.name])),
             showCancelButton: true,
-            confirmButtonText: 'Assign',
-            cancelButtonText: 'Cancel'
+            confirmButtonText: 'Assign'
         });
         if (roleId) {
             await userRolesRef.child(userId).set(roleId);
-            Swal.fire('Success', `Role assigned to ${username}`, 'success');
-            loadMembers();
+            Swal.fire('Success', 'Role assigned', 'success');
         }
     }
     
     function createRole() {
         Swal.fire({
             title: 'Create Role',
-            html: `<input id="roleName" class="swal2-input" placeholder="Role name"><input id="roleColor" class="swal2-input" type="color" value="#667eea">`,
+            html: `<input id="roleName" class="swal2-input" placeholder="Role name"><input id="roleColor" class="swal2-input" type="color" value="#5865f2">`,
             showCancelButton: true,
             confirmButtonText: 'Create',
-            cancelButtonText: 'Cancel',
             preConfirm: () => {
                 const name = document.getElementById('roleName').value;
                 const color = document.getElementById('roleColor').value;
@@ -1639,13 +1602,14 @@
         });
     }
     
-    async function editRole(roleId, oldName, oldColor) {
+    async function editRole(roleId) {
+        const roleSnapshot = await rolesRef.child(roleId).once('value');
+        const role = roleSnapshot.val();
         const { value: formValues } = await Swal.fire({
             title: 'Edit Role',
-            html: `<input id="roleName" class="swal2-input" value="${oldName}"><input id="roleColor" class="swal2-input" type="color" value="${oldColor}">`,
+            html: `<input id="roleName" class="swal2-input" value="${role.name}"><input id="roleColor" class="swal2-input" type="color" value="${role.color}">`,
             showCancelButton: true,
             confirmButtonText: 'Save',
-            cancelButtonText: 'Cancel',
             preConfirm: () => {
                 const name = document.getElementById('roleName').value;
                 const color = document.getElementById('roleColor').value;
@@ -1665,11 +1629,9 @@
     async function deleteRole(roleId) {
         const result = await Swal.fire({
             title: 'Delete Role?',
-            text: 'Cannot be undone',
             icon: 'warning',
             showCancelButton: true,
-            confirmButtonText: 'Delete',
-            cancelButtonText: 'Cancel'
+            confirmButtonText: 'Delete'
         });
         if (result.isConfirmed) {
             await rolesRef.child(roleId).remove();
@@ -1678,12 +1640,12 @@
         }
     }
     
-    async function configureChannel(channelId, channelName) {
+    async function configureChannel(channelId) {
         const channelSnapshot = await channelsRef.child(channelId).once('value');
         const channel = channelSnapshot.val();
         
         const { value: formValues } = await Swal.fire({
-            title: `Configure ${channelName}`,
+            title: 'Configure Channel',
             html: `
                 <div class="channel-permissions">
                     <div class="permission-group">
@@ -1710,34 +1672,37 @@
             `,
             showCancelButton: true,
             confirmButtonText: 'Save',
-            cancelButtonText: 'Cancel',
             width: '500px'
         });
         
         if (formValues) {
-            const viewPerm = document.getElementById('viewPermission').value;
-            const sendPerm = document.getElementById('sendPermission').value;
-            const slowmode = parseInt(document.getElementById('slowmode').value) || 0;
-            
             await channelsRef.child(channelId).update({
-                allowedToView: viewPerm,
-                allowedToSend: sendPerm,
-                slowmode: slowmode
+                allowedToView: document.getElementById('viewPermission').value,
+                allowedToSend: document.getElementById('sendPermission').value,
+                slowmode: parseInt(document.getElementById('slowmode').value) || 0
             });
-            
-            Swal.fire('Success', 'Channel configuration updated', 'success');
-            updateSlowmodeIndicator();
+            Swal.fire('Success', 'Channel configured', 'success');
+            if (currentChatId === channelId) {
+                const channel = await channelsRef.child(channelId).once('value');
+                if (channel.val().slowmode > 0) {
+                    document.getElementById('slowmodeIndicator').style.display = 'inline';
+                    document.getElementById('slowmodeIndicator').textContent = `Slow Mode: ${channel.val().slowmode}s`;
+                } else {
+                    document.getElementById('slowmodeIndicator').style.display = 'none';
+                }
+            }
         }
     }
     
-    async function editChannel(channelId, oldName) {
+    async function editChannel(channelId) {
+        const channelSnapshot = await channelsRef.child(channelId).once('value');
+        const oldName = channelSnapshot.val().displayName;
         const { value: newName } = await Swal.fire({
             title: 'Edit Channel',
             input: 'text',
             inputValue: oldName,
             showCancelButton: true,
-            confirmButtonText: 'Save',
-            cancelButtonText: 'Cancel'
+            confirmButtonText: 'Save'
         });
         if (newName) {
             await channelsRef.child(channelId).update({
@@ -1745,249 +1710,156 @@
                 displayName: newName
             });
             Swal.fire('Success', 'Channel updated', 'success');
-            loadChannelsList();
-            loadChannelsSidebar();
-            updateChannelName();
+            loadChannels();
+            if (currentChatId === channelId) {
+                document.getElementById('channelName').textContent = `# ${newName}`;
+            }
         }
     }
     
     async function deleteChannel(channelId) {
         const result = await Swal.fire({
             title: 'Delete Channel?',
-            text: 'All messages will be deleted permanently',
+            text: 'All messages will be deleted',
             icon: 'warning',
             showCancelButton: true,
-            confirmButtonText: 'Delete',
-            cancelButtonText: 'Cancel'
+            confirmButtonText: 'Delete'
         });
         if (result.isConfirmed) {
             await channelsRef.child(channelId).remove();
-            await messagesRef.child(channelId).remove();
+            const messagesToDelete = await messagesRef.orderByChild('chatId').equalTo(channelId).once('value');
+            messagesToDelete.forEach(msg => messagesRef.child(msg.key).remove());
             Swal.fire('Deleted', 'Channel deleted', 'success');
-            loadChannelsList();
-            const snapshot = await channelsRef.once('value');
-            let newChannelId = null;
-            snapshot.forEach(child => {
-                if (!newChannelId) newChannelId = child.key;
+            loadChannels();
+            if (currentChatId === channelId) {
+                const snapshot = await channelsRef.once('value');
+                let newChannelId = null;
+                snapshot.forEach(child => {
+                    if (!newChannelId) newChannelId = child.key;
+                });
+                if (newChannelId) {
+                    const newChannel = await channelsRef.child(newChannelId).once('value');
+                    await switchToServerChannel(newChannelId, newChannel.val().displayName);
+                }
+            }
+        }
+    }
+    
+    async function createServer() {
+        const { value: serverName } = await Swal.fire({
+            title: 'Create Server',
+            input: 'text',
+            inputPlaceholder: 'Server name',
+            showCancelButton: true,
+            confirmButtonText: 'Create'
+        });
+        
+        if (serverName) {
+            const newChannel = await channelsRef.push({
+                name: serverName.toLowerCase().replace(/\s/g, '-'),
+                displayName: serverName,
+                createdBy: currentUser.username,
+                createdAt: Date.now(),
+                owner: currentUser.id,
+                allowedToView: 'all',
+                allowedToSend: 'all',
+                slowmode: 0
             });
-            if (newChannelId) await switchChannel(newChannelId);
-            else {
-                currentChannelId = null;
-                await loadChannelsSidebar();
-                const messagesContainer = document.getElementById('chatMessages');
-                if (messagesContainer) messagesContainer.innerHTML = '<div class="loading-text">No channels available</div>';
+            
+            await switchToServerChannel(newChannel.key, serverName);
+            Swal.fire('Success', `Server "${serverName}" created!`, 'success');
+            loadChannels();
+        }
+    }
+    
+    function switchToServerView() {
+        if (currentChatType === 'server') return;
+        const snapshot = channelsRef.limitToFirst(1).once('value', (snap) => {
+            snap.forEach(child => {
+                switchToServerChannel(child.key, child.val().displayName);
+            });
+        });
+    }
+    
+    // Профиль пользователя
+    async function showUserProfile(userId) {
+        const userSnapshot = await usersRef.child(userId).once('value');
+        const user = userSnapshot.val();
+        if (!user) return;
+        
+        let roleText = '';
+        const roleSnapshot = await userRolesRef.child(userId).once('value');
+        if (roleSnapshot.exists()) {
+            const roleId = roleSnapshot.val();
+            const roleData = await rolesRef.child(roleId).once('value');
+            if (roleData.exists()) {
+                roleText = `<div style="margin-top: 10px; padding: 5px; background: ${roleData.val().color}; border-radius: 4px;">Role: ${roleData.val().name}</div>`;
             }
         }
+        
+        Swal.fire({
+            title: user.displayName || user.username,
+            html: `
+                <div style="text-align: center;">
+                    <img src="${user.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.displayName)}&background=5865f2&color=white&size=100`}" style="width: 100px; height: 100px; border-radius: 50%; margin-bottom: 15px;">
+                    <div><strong>Username:</strong> ${escapeHtml(user.username)}</div>
+                    ${roleText}
+                    ${userId !== currentUser.id ? `<button onclick="startDM('${userId}', '${escapeHtml(user.displayName || user.username)}')" style="margin-top: 15px; padding: 8px 16px; background: #5865f2; border: none; border-radius: 4px; color: white; cursor: pointer;">Send Message</button>` : ''}
+                </div>
+            `,
+            confirmButtonText: 'Close',
+            background: '#2b2d31',
+            color: 'white'
+        });
     }
     
-    function logout() {
-        if (currentMessagesListener && currentChannelId) {
-            messagesRef.child(currentChannelId).off('child_added', currentMessagesListener);
-        }
-        currentUser = null;
-        currentChannelId = null;
-        replyingTo = null;
-        localStorage.removeItem('chatUser');
-        renderAuthScreen();
-    }
-    
-    function renderMainApp() {
-        const displayName = currentUser.displayName || currentUser.username;
-        const avatarUrl = currentUser.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(displayName)}&background=2b2b2b&color=white&size=32`;
-        const appDiv = document.getElementById('app');
-        appDiv.innerHTML = `
-            <div class="app-container">
-                <div class="channels-sidebar">
-                    <div class="channels-header">Channels</div>
-                    <div class="channels-list" id="channelsList"></div>
-                    ${isAdmin ? '<div class="add-channel-btn" onclick="window.createChannelWithConfig()">+ Create Channel</div>' : ''}
+    function showProfileModal() {
+        Swal.fire({
+            title: 'Edit Profile',
+            html: `
+                <div style="text-align: center; margin-bottom: 15px;">
+                    <img id="avatarPreview" src="${currentUser.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(currentUser.displayName)}&background=5865f2&color=white&size=100`}" style="width: 100px; height: 100px; border-radius: 50%;">
+                    <button class="add-friend-btn" onclick="window.changeAvatar()" style="display: block; margin: 10px auto;">Change Avatar</button>
                 </div>
-                <div class="main-container">
-                    <div class="chat-header">
-                        <div class="channel-info">
-                            <h2 id="channelName"># Loading...</h2>
-                            <p>Text channel <span id="slowmodeIndicator" class="slowmode-indicator" style="display:none;"></span></p>
-                        </div>
-                        <div class="user-profile">
-                            <img src="${avatarUrl}" style="width:32px;height:32px;border-radius:50%;" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(displayName)}&background=2b2b2b&color=white&size=32'">
-                            <button class="profile-btn" onclick="window.showProfileModal()">${escapeHtml(displayName)}</button>
-                            <button class="logout-btn" onclick="logout()">Logout</button>
-                        </div>
-                    </div>
-                    <div class="chat-messages" id="chatMessages"></div>
-                    <div class="bottom-panel">
-                        <div id="replyBar" class="reply-bar">
-                            <span id="replyText"></span>
-                            <button class="cancel-reply" onclick="cancelReply()">✖</button>
-                        </div>
-                        <div class="input-area">
-                            ${isAdmin ? '<button class="admin-btn" onclick="window.showAdminPanel()">Admin Panel</button>' : ''}
-                            <div class="message-input-wrapper">
-                                <input type="text" id="messageInput" placeholder="Type a message...">
-                                <div class="media-buttons">
-                                    <button class="media-btn" onclick="window.showImageUploadDialog()">Image</button>
-                                    <button class="media-btn" onclick="window.showGifUploadDialog()">GIF</button>
-                                </div>
-                                <button id="sendButton" onclick="sendMessage(document.getElementById('messageInput').value)">Send</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="members-sidebar">
-                    <div class="members-header">Members</div>
-                    <div class="members-list" id="membersList"></div>
-                    <div class="status-text">Status: Online</div>
-                </div>
-            </div>
-            <div id="adminModal" class="modal">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h2>Admin Panel</h2>
-                        <button class="close-modal" onclick="document.getElementById('adminModal').style.display='none'">×</button>
-                    </div>
-                    <div class="admin-tabs">
-                        <div class="admin-tab active" onclick="switchAdminTab('users')">Users</div>
-                        <div class="admin-tab" onclick="switchAdminTab('roles')">Roles</div>
-                        <div class="admin-tab" onclick="switchAdminTab('channels')">Channels</div>
-                    </div>
-                    <div id="usersPanel" class="admin-panel active">
-                        <div class="user-list" id="usersList"></div>
-                    </div>
-                    <div id="rolesPanel" class="admin-panel">
-                        <button class="add-channel-btn" onclick="window.createRole()">+ Create Role</button>
-                        <div class="role-list" id="rolesList"></div>
-                    </div>
-                    <div id="channelsPanel" class="admin-panel">
-                        <div class="channel-list" id="channelsListAdmin"></div>
-                    </div>
-                </div>
-            </div>
-        `;
-        loadChannelsSidebar();
-        loadMembers();
-        const messageInput = document.getElementById('messageInput');
-        if (messageInput) {
-            messageInput.onkeypress = (e) => {
-                if (e.key === 'Enter') {
-                    e.preventDefault();
-                    sendMessage(messageInput.value);
+                <input id="displayNameInput" class="auth-input" placeholder="Display Name" value="${escapeHtml(currentUser.displayName)}">
+            `,
+            showCancelButton: true,
+            confirmButtonText: 'Save',
+            preConfirm: () => {
+                const displayName = document.getElementById('displayNameInput').value.trim();
+                if (!displayName) {
+                    Swal.showValidationMessage('Display name required');
+                    return false;
                 }
-            };
-        }
-    }
-    
-    function renderAuthScreen() {
-        const appDiv = document.getElementById('app');
-        appDiv.innerHTML = `<div class="auth-overlay"><div class="auth-container"><div class="auth-title" id="authTitle">Register</div><input type="text" id="username" class="auth-input" placeholder="Username"><input type="password" id="password" class="auth-input" placeholder="Password"><div id="errorMessage" class="error-message"></div><button class="auth-button" id="submitButton">Register</button><div class="auth-switch" id="authSwitch">Already have an account? Login</div></div></div>`;
-        let isLoginMode = false;
-        document.getElementById('submitButton').onclick = () => submitAuth(isLoginMode);
-        document.getElementById('authSwitch').onclick = () => {
-            isLoginMode = !isLoginMode;
-            const title = document.getElementById('authTitle');
-            const submitBtn = document.getElementById('submitButton');
-            const switchBtn = document.getElementById('authSwitch');
-            if (isLoginMode) {
-                title.textContent = 'Login';
-                submitBtn.textContent = 'Login';
-                switchBtn.textContent = "Don't have an account? Register";
-            } else {
-                title.textContent = 'Register';
-                submitBtn.textContent = 'Register';
-                switchBtn.textContent = 'Already have an account? Login';
+                return { displayName };
             }
-            document.getElementById('errorMessage').textContent = '';
-        };
-    }
-    
-    async function submitAuth(isLoginMode) {
-        const username = document.getElementById('username').value.trim();
-        const password = document.getElementById('password').value;
-        const errorElement = document.getElementById('errorMessage');
-        const submitButton = document.getElementById('submitButton');
-        if (!username || !password) {
-            errorElement.textContent = 'Fill all fields';
-            return;
-        }
-        if (username.length < 3) {
-            errorElement.textContent = 'Username min 3 chars';
-            return;
-        }
-        submitButton.disabled = true;
-        submitButton.textContent = 'Checking...';
-        errorElement.textContent = '';
-        try {
-            if (isLoginMode) {
-                const userSnapshot = await usersRef.orderByChild('username').equalTo(username).once('value');
-                if (!userSnapshot.exists()) {
-                    errorElement.textContent = 'User not found';
-                    submitButton.disabled = false;
-                    submitButton.textContent = 'Login';
-                    return;
-                }
-                let userFound = false;
-                userSnapshot.forEach((childSnapshot) => {
-                    const data = childSnapshot.val();
-                    if (data.password === password) {
-                        userFound = true;
-                        currentUser = {
-                            id: childSnapshot.key,
-                            username: data.username,
-                            displayName: data.displayName,
-                            avatar: data.avatar
-                        };
-                    }
+        }).then(async (result) => {
+            if (result.value) {
+                await usersRef.child(currentUser.id).update({
+                    displayName: result.value.displayName
                 });
-                if (userFound) {
-                    const isBanned = await bansRef.child(currentUser.id).once('value');
-                    if (isBanned.exists()) {
-                        const banData = isBanned.val();
-                        if (!banData.expiresAt || banData.expiresAt > Date.now()) {
-                            errorElement.textContent = 'You are banned';
-                            submitButton.disabled = false;
-                            submitButton.textContent = 'Login';
-                            return;
-                        } else {
-                            await bansRef.child(currentUser.id).remove();
-                        }
-                    }
-                    localStorage.setItem('chatUser', JSON.stringify(currentUser));
-                    isAdmin = currentUser.username === ADMIN_USERNAME;
-                    renderMainApp();
-                } else {
-                    errorElement.textContent = 'Invalid password';
-                    submitButton.disabled = false;
-                    submitButton.textContent = 'Login';
-                }
-            } else {
-                const existingUser = await usersRef.orderByChild('username').equalTo(username).once('value');
-                if (existingUser.exists()) {
-                    errorElement.textContent = 'Username taken';
-                    submitButton.disabled = false;
-                    submitButton.textContent = 'Register';
-                    return;
-                }
-                const newUserRef = usersRef.push();
-                await newUserRef.set({
-                    username,
-                    password,
-                    displayName: username,
-                    avatar: null,
-                    createdAt: Date.now()
-                });
-                currentUser = {
-                    id: newUserRef.key,
-                    username,
-                    displayName: username,
-                    avatar: null
-                };
-                localStorage.setItem('chatUser', JSON.stringify(currentUser));
-                isAdmin = currentUser.username === ADMIN_USERNAME;
+                currentUser.displayName = result.value.displayName;
+                Swal.fire('Success', 'Profile updated', 'success');
                 renderMainApp();
             }
-        } catch (error) {
-            errorElement.textContent = 'Error: ' + (error.message || 'Unknown');
-            submitButton.disabled = false;
-            submitButton.textContent = isLoginMode ? 'Login' : 'Register';
+        });
+    }
+    
+    async function changeAvatar() {
+        const { value: file } = await Swal.fire({
+            title: 'Select Avatar',
+            input: 'file',
+            inputAttributes: { 'accept': 'image/*' },
+            showCancelButton: true,
+            confirmButtonText: 'Upload'
+        });
+        
+        if (file) {
+            const avatarUrl = await uploadFile(file);
+            await usersRef.child(currentUser.id).update({ avatar: avatarUrl });
+            currentUser.avatar = avatarUrl;
+            Swal.fire('Success', 'Avatar updated', 'success');
+            renderMainApp();
         }
     }
     
@@ -2006,55 +1878,294 @@
         }
     }
     
-    async function createChannelWithConfig() {
-        const { value: channelName } = await Swal.fire({
-            title: 'Create Channel',
-            input: 'text',
-            inputPlaceholder: 'Channel name',
-            showCancelButton: true,
-            confirmButtonText: 'Create'
-        });
-        if (channelName) {
-            const newChannelRef = channelsRef.push();
-            await newChannelRef.set({
-                name: channelName.toLowerCase().replace(/\s/g, '-'),
-                displayName: channelName,
-                createdBy: currentUser.username,
-                createdAt: Date.now(),
-                owner: currentUser.id,
-                allowedToView: 'all',
-                allowedToSend: 'all',
-                slowmode: 0
+    function logout() {
+        if (currentMessagesListener) {
+            messagesRef.off('child_added', currentMessagesListener);
+        }
+        currentUser = null;
+        localStorage.removeItem('chatUser');
+        renderAuthScreen();
+    }
+    
+    function renderMainApp() {
+        const avatarUrl = currentUser.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(currentUser.displayName)}&background=5865f2&color=white&size=32`;
+        
+        const appDiv = document.getElementById('app');
+        appDiv.innerHTML = `
+            <div class="app-container">
+                <div class="servers-sidebar">
+                    <div class="server-item active" onclick="switchToServerView()">
+                        <span>🏠</span>
+                    </div>
+                    <div class="add-server-btn" onclick="createServer()">+</div>
+                </div>
+                <div class="channels-sidebar">
+                    <div class="sidebar-header" id="sidebarHeader">
+                        <span id="sidebarTitle">Friends</span>
+                        <span>▼</span>
+                    </div>
+                    <div id="friendsList" class="friends-list"></div>
+                    <div id="channelsList" class="channels-list" style="display: none;"></div>
+                    <button class="add-friend-btn" onclick="addFriend()">➕ Add Friend</button>
+                    ${isAdmin ? '<button class="admin-panel-btn" onclick="showAdminPanel()">⚙️ Admin Panel</button>' : ''}
+                </div>
+                <div class="main-container">
+                    <div class="chat-header">
+                        <div class="channel-info">
+                            <h2 id="channelName">Welcome</h2>
+                            <p id="channelTopic">Select a channel to start chatting <span id="slowmodeIndicator" class="slowmode-indicator" style="display:none;"></span></p>
+                        </div>
+                        <div class="user-profile">
+                            <img src="${avatarUrl}" style="width: 32px; height: 32px; border-radius: 50%;">
+                            <button class="profile-btn" onclick="showProfileModal()">${escapeHtml(currentUser.displayName)}</button>
+                            <button class="profile-btn" onclick="showPinnedMessages()">📌 Pinned</button>
+                            <button class="logout-btn" onclick="logout()">Logout</button>
+                        </div>
+                    </div>
+                    <div class="chat-messages" id="chatMessages"></div>
+                    <div class="bottom-panel">
+                        <div id="replyBar" class="reply-bar">
+                            <span id="replyText"></span>
+                            <button class="cancel-reply" onclick="cancelReply()">✖</button>
+                        </div>
+                        <div class="input-area">
+                            <div class="message-input-wrapper">
+                                <input type="text" id="messageInput" placeholder="Type a message...">
+                                <div class="media-buttons">
+                                    <button class="media-btn" onclick="showImageUploadDialog()">📷</button>
+                                </div>
+                                <button id="sendButton" onclick="sendMessage(document.getElementById('messageInput').value)">Send</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div id="adminModal" class="modal">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h2>Admin Panel</h2>
+                        <button class="close-modal" onclick="document.getElementById('adminModal').style.display='none'">×</button>
+                    </div>
+                    <div class="admin-tabs">
+                        <div class="admin-tab active" onclick="switchAdminTab('users')">Users</div>
+                        <div class="admin-tab" onclick="switchAdminTab('roles')">Roles</div>
+                        <div class="admin-tab" onclick="switchAdminTab('channels')">Channels</div>
+                    </div>
+                    <div id="usersPanel" class="admin-panel active">
+                        <div class="user-list" id="usersList"></div>
+                    </div>
+                    <div id="rolesPanel" class="admin-panel">
+                        <button class="add-friend-btn" onclick="createRole()" style="width: calc(100% - 24px); margin: 12px;">+ Create Role</button>
+                        <div class="role-list" id="rolesList"></div>
+                    </div>
+                    <div id="channelsPanel" class="admin-panel">
+                        <div class="channel-list" id="channelsListAdmin"></div>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        loadFriends();
+        loadChannels();
+        
+        const sidebarHeader = document.getElementById('sidebarHeader');
+        let showingFriends = true;
+        sidebarHeader.onclick = () => {
+            showingFriends = !showingFriends;
+            const friendsList = document.getElementById('friendsList');
+            const channelsList = document.getElementById('channelsList');
+            const title = document.getElementById('sidebarTitle');
+            
+            if (showingFriends) {
+                title.textContent = 'Friends';
+                friendsList.style.display = 'block';
+                channelsList.style.display = 'none';
+            } else {
+                title.textContent = 'Servers';
+                friendsList.style.display = 'none';
+                channelsList.style.display = 'block';
+            }
+        };
+        
+        const messageInput = document.getElementById('messageInput');
+        if (messageInput) {
+            messageInput.onkeypress = (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    sendMessage(messageInput.value);
+                }
+            };
+        }
+        
+        if (currentChatId && currentChatType === 'server') {
+            channelsRef.child(currentChatId).once('value', (snap) => {
+                if (snap.exists()) {
+                    document.getElementById('channelName').textContent = `# ${snap.val().displayName}`;
+                    if (snap.val().slowmode > 0) {
+                        document.getElementById('slowmodeIndicator').style.display = 'inline';
+                        document.getElementById('slowmodeIndicator').textContent = `Slow Mode: ${snap.val().slowmode}s`;
+                    }
+                }
             });
-            Swal.fire('Success', `Channel #${channelName} created`, 'success');
-            await loadChannelsSidebar();
-            await switchChannel(newChannelRef.key);
         }
     }
     
+    function renderAuthScreen() {
+        const appDiv = document.getElementById('app');
+        appDiv.innerHTML = `
+            <div class="auth-overlay">
+                <div class="auth-container">
+                    <div class="auth-title" id="authTitle">Create Account</div>
+                    <input type="text" id="username" class="auth-input" placeholder="Username">
+                    <input type="password" id="password" class="auth-input" placeholder="Password">
+                    <div id="errorMessage" class="error-message"></div>
+                    <button class="auth-button" id="submitButton">Register</button>
+                    <div class="auth-switch" id="authSwitch">Already have an account? Login</div>
+                </div>
+            </div>
+        `;
+        
+        let isLoginMode = false;
+        document.getElementById('submitButton').onclick = () => submitAuth(isLoginMode);
+        document.getElementById('authSwitch').onclick = () => {
+            isLoginMode = !isLoginMode;
+            const title = document.getElementById('authTitle');
+            const submitBtn = document.getElementById('submitButton');
+            if (isLoginMode) {
+                title.textContent = 'Login';
+                submitBtn.textContent = 'Login';
+            } else {
+                title.textContent = 'Create Account';
+                submitBtn.textContent = 'Register';
+            }
+        };
+    }
+    
+    async function submitAuth(isLoginMode) {
+        const username = document.getElementById('username').value.trim();
+        const password = document.getElementById('password').value;
+        const errorElement = document.getElementById('errorMessage');
+        const submitButton = document.getElementById('submitButton');
+        
+        if (!username || !password) {
+            errorElement.textContent = 'Fill all fields';
+            return;
+        }
+        
+        submitButton.disabled = true;
+        submitButton.textContent = 'Processing...';
+        
+        try {
+            if (isLoginMode) {
+                const userSnapshot = await usersRef.orderByChild('username').equalTo(username).once('value');
+                if (!userSnapshot.exists()) {
+                    errorElement.textContent = 'User not found';
+                    return;
+                }
+                
+                let userFound = false;
+                userSnapshot.forEach(childSnapshot => {
+                    const data = childSnapshot.val();
+                    if (data.password === password) {
+                        userFound = true;
+                        currentUser = {
+                            id: childSnapshot.key,
+                            username: data.username,
+                            displayName: data.displayName || data.username,
+                            avatar: data.avatar
+                        };
+                    }
+                });
+                
+                if (userFound) {
+                    const isBanned = await bansRef.child(currentUser.id).once('value');
+                    if (isBanned.exists()) {
+                        const banData = isBanned.val();
+                        if (!banData.expiresAt || banData.expiresAt > Date.now()) {
+                            errorElement.textContent = 'You are banned';
+                            return;
+                        } else {
+                            await bansRef.child(currentUser.id).remove();
+                        }
+                    }
+                    localStorage.setItem('chatUser', JSON.stringify(currentUser));
+                    isAdmin = currentUser.username === ADMIN_USERNAME;
+                    renderMainApp();
+                } else {
+                    errorElement.textContent = 'Invalid password';
+                }
+            } else {
+                const existingUser = await usersRef.orderByChild('username').equalTo(username).once('value');
+                if (existingUser.exists()) {
+                    errorElement.textContent = 'Username taken';
+                    return;
+                }
+                
+                const newUserRef = usersRef.push();
+                await newUserRef.set({
+                    username,
+                    password,
+                    displayName: username,
+                    avatar: null,
+                    createdAt: Date.now()
+                });
+                
+                currentUser = {
+                    id: newUserRef.key,
+                    username,
+                    displayName: username,
+                    avatar: null
+                };
+                localStorage.setItem('chatUser', JSON.stringify(currentUser));
+                isAdmin = currentUser.username === ADMIN_USERNAME;
+                renderMainApp();
+            }
+        } catch (error) {
+            errorElement.textContent = 'Error: ' + error.message;
+        } finally {
+            submitButton.disabled = false;
+            submitButton.textContent = isLoginMode ? 'Login' : 'Register';
+        }
+    }
+    
+    // Глобальные функции
+    window.addFriend = addFriend;
+    window.startDM = startDM;
+    window.showUserProfile = showUserProfile;
+    window.showProfileModal = showProfileModal;
+    window.changeAvatar = changeAvatar;
+    window.sendMessage = sendMessage;
+    window.showImageUploadDialog = showImageUploadDialog;
+    window.togglePinMessage = togglePinMessage;
+    window.showPinnedMessages = showPinnedMessages;
+    window.deleteMessage = deleteMessage;
+    window.setReplyTo = setReplyTo;
+    window.cancelReply = cancelReply;
+    window.createServer = createServer;
+    window.switchToServerView = switchToServerView;
+    window.showAdminPanel = showAdminPanel;
     window.banUser = banUser;
     window.muteUser = muteUser;
     window.assignRole = assignRole;
     window.createRole = createRole;
     window.editRole = editRole;
     window.deleteRole = deleteRole;
-    window.createChannelWithConfig = createChannelWithConfig;
     window.configureChannel = configureChannel;
     window.editChannel = editChannel;
     window.deleteChannel = deleteChannel;
-    window.showAdminPanel = showAdminPanel;
-    window.showImageUploadDialog = showImageUploadDialog;
-    window.showGifUploadDialog = showGifUploadDialog;
-    window.showAvatarUploadDialog = showAvatarUploadDialog;
-    window.sendMessage = sendMessage;
     window.switchAdminTab = switchAdminTab;
-    window.logout = logout;
-    window.showProfileModal = showProfileModal;
-    window.showUserProfile = showUserProfile;
-    window.deleteMessage = deleteMessage;
-    window.setReplyTo = setReplyTo;
-    window.cancelReply = cancelReply;
+    window.scrollToMessage = (messageId) => {
+        const element = document.querySelector(`.message[data-key="${messageId}"]`);
+        if (element) {
+            element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            element.style.background = '#2b2d31';
+            setTimeout(() => {
+                element.style.background = '';
+            }, 2000);
+        }
+    };
     
+    // Инициализация
     async function init() {
         const savedUser = localStorage.getItem('chatUser');
         if (savedUser) {
@@ -2066,20 +2177,9 @@
                     currentUser = {
                         id: userData.id,
                         username: userVal.username,
-                        displayName: userVal.displayName,
+                        displayName: userVal.displayName || userVal.username,
                         avatar: userVal.avatar
                     };
-                    const isBanned = await bansRef.child(currentUser.id).once('value');
-                    if (isBanned.exists()) {
-                        const banData = isBanned.val();
-                        if (!banData.expiresAt || banData.expiresAt > Date.now()) {
-                            localStorage.removeItem('chatUser');
-                            renderAuthScreen();
-                            return;
-                        } else {
-                            await bansRef.child(currentUser.id).remove();
-                        }
-                    }
                     isAdmin = currentUser.username === ADMIN_USERNAME;
                     renderMainApp();
                     return;
