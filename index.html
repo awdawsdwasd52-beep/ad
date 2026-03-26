@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Full Chat - Infinite Scroll (Discord-like)</title>
+    <title>Full Chat - Infinite Scroll with Reply & Delete</title>
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -166,6 +166,11 @@
             word-wrap: break-word;
             animation: fadeIn 0.2s ease;
             position: relative;
+            transition: background 0.2s;
+        }
+
+        .message:hover {
+            filter: brightness(1.1);
         }
 
         .message.media-message {
@@ -206,6 +211,7 @@
             display: flex;
             align-items: center;
             gap: 8px;
+            flex-wrap: wrap;
         }
 
         .message-avatar {
@@ -213,6 +219,7 @@
             height: 24px;
             border-radius: 50%;
             object-fit: cover;
+            cursor: pointer;
         }
 
         .role-badge {
@@ -223,10 +230,91 @@
             font-weight: bold;
         }
 
+        .reply-preview {
+            background: rgba(255,255,255,0.1);
+            border-left: 3px solid #667eea;
+            padding: 5px 10px;
+            margin-bottom: 8px;
+            font-size: 0.8rem;
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .reply-preview span {
+            color: #aaa;
+        }
+
+        .cancel-reply {
+            background: none;
+            border: none;
+            color: #ff4444;
+            cursor: pointer;
+            font-size: 1.2rem;
+            padding: 0 5px;
+        }
+
+        .message-actions {
+            position: absolute;
+            right: 10px;
+            top: -20px;
+            background: #2b2b2b;
+            border-radius: 8px;
+            padding: 4px 8px;
+            gap: 8px;
+            display: none;
+            z-index: 10;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+        }
+
+        .message:hover .message-actions {
+            display: flex;
+        }
+
+        .message-action-btn {
+            background: none;
+            border: none;
+            color: white;
+            cursor: pointer;
+            padding: 4px 8px;
+            font-size: 0.75rem;
+            border-radius: 4px;
+            transition: background 0.2s;
+        }
+
+        .message-action-btn:hover {
+            background: #3a3a3a;
+        }
+
+        .reply-btn:hover { color: #667eea; }
+        .delete-btn:hover { color: #ff4444; }
+
         .bottom-panel {
             padding: 15px 20px;
             background: black;
             border-top: 1px solid #2a2a2a;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .reply-bar {
+            background: #1a1a1a;
+            border-radius: 8px;
+            padding: 8px 12px;
+            display: none;
+            justify-content: space-between;
+            align-items: center;
+            color: #aaa;
+            font-size: 0.85rem;
+        }
+
+        .reply-bar.active {
+            display: flex;
+        }
+
+        .input-area {
             display: flex;
             gap: 10px;
             align-items: center;
@@ -657,8 +745,11 @@
     let isLoadingMore = false;
     let hasMoreMessages = true;
     let oldestMessageTimestamp = null;
-    let currentChannelIdState = null;
     let displayedMessagesSet = new Set();
+    let replyingTo = null; // { messageId, username, text }
+    let currentChannelId = null;
+    let currentUser = null;
+    let isAdmin = false;
     
     const firebaseConfig = {
         apiKey: "AIzaSyB9XzL1XzL1XzL1XzL1XzL1XzL1XzL1",
@@ -679,10 +770,6 @@
     const channelsRef = database.ref('channels');
     const rolesRef = database.ref('roles');
     const userRolesRef = database.ref('user_roles');
-    
-    let currentUser = null;
-    let currentChannelId = null;
-    let isAdmin = false;
     
     function getDirectGifUrl(url) {
         if (url.includes('tenor.com')) {
@@ -834,7 +921,52 @@
         return true;
     }
     
-    // INFINITE SCROLL: load older messages (20 at a time)
+    async function deleteMessage(messageId, messageUserId) {
+        const canDelete = isAdmin || messageUserId === currentUser.id;
+        if (!canDelete) {
+            Swal.fire('Error', 'You can only delete your own messages', 'error');
+            return;
+        }
+        
+        const result = await Swal.fire({
+            title: 'Delete Message?',
+            text: 'This action cannot be undone',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Delete',
+            cancelButtonText: 'Cancel'
+        });
+        
+        if (result.isConfirmed) {
+            await messagesRef.child(currentChannelId).child(messageId).remove();
+            const messageElement = document.querySelector(`.message[data-key="${messageId}"]`);
+            if (messageElement) {
+                messageElement.remove();
+            }
+            displayedMessagesSet.delete(messageId);
+            Swal.fire('Deleted', 'Message deleted', 'success');
+        }
+    }
+    
+    function setReplyTo(messageId, username, text) {
+        replyingTo = { messageId, username, text: text.substring(0, 100) };
+        const replyBar = document.getElementById('replyBar');
+        const replyText = document.getElementById('replyText');
+        if (replyBar && replyText) {
+            replyText.innerHTML = `Replying to <strong>${escapeHtml(username)}</strong>: ${escapeHtml(text.substring(0, 80))}${text.length > 80 ? '...' : ''}`;
+            replyBar.classList.add('active');
+        }
+        document.getElementById('messageInput').focus();
+    }
+    
+    function cancelReply() {
+        replyingTo = null;
+        const replyBar = document.getElementById('replyBar');
+        if (replyBar) {
+            replyBar.classList.remove('active');
+        }
+    }
+    
     async function loadMoreMessages() {
         if (!currentChannelId || isLoadingMore || !hasMoreMessages) return;
         isLoadingMore = true;
@@ -938,12 +1070,23 @@
         const displayName = message.displayName || message.username;
         const avatarUrl = message.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(displayName)}&background=2b2b2b&color=white&size=24`;
         
+        let replyHtml = '';
+        if (message.replyTo) {
+            replyHtml = `
+                <div class="reply-preview">
+                    <span>↳ Reply to <strong>${escapeHtml(message.replyToUsername)}</strong>: ${escapeHtml(message.replyToText)}</span>
+                </div>
+            `;
+        }
+        
         let content = '';
         if (message.type === 'image' || message.type === 'gif') {
             content = `<img src="${escapeHtml(message.text)}" onclick="window.open('${escapeHtml(message.text)}', '_blank')" style="max-width: 300px; max-height: 300px; border-radius: 10px; cursor: pointer;" onerror="this.src='https://placehold.co/300x200/2b2b2b/white?text=Failed+to+load'">`;
         } else {
             content = `<div class="message-text">${escapeHtml(message.text)}</div>`;
         }
+        
+        const canDelete = isAdmin || message.userId === currentUser.id;
         
         messageDiv.innerHTML = `
             <div class="message-info">
@@ -952,7 +1095,12 @@
                 ${userRole}
                 <span>• ${timeStr}</span>
             </div>
+            ${replyHtml}
             ${content}
+            <div class="message-actions">
+                <button class="message-action-btn reply-btn" onclick="event.stopPropagation(); setReplyTo('${message.key}', '${escapeHtml(displayName)}', '${escapeHtml(message.text).replace(/'/g, "\\'")}')">↩️ Reply</button>
+                ${canDelete ? `<button class="message-action-btn delete-btn" onclick="event.stopPropagation(); deleteMessage('${message.key}', '${message.userId}')">🗑️ Delete</button>` : ''}
+            </div>
         `;
         return messageDiv;
     }
@@ -1017,6 +1165,7 @@
     
     async function switchChannel(channelId) {
         if (!channelId) return;
+        
         const canView = await checkChannelPermissions(channelId, currentUser.id, 'view');
         if (!canView) {
             Swal.fire('Access Denied', 'You do not have permission to view this channel', 'error');
@@ -1028,12 +1177,9 @@
         }
         
         currentChannelId = channelId;
-        currentChannelIdState = channelId;
+        cancelReply();
         await loadInitialMessages(channelId);
         
-        if (currentMessagesListener) {
-            messagesRef.child(channelId).off('child_added', currentMessagesListener);
-        }
         currentMessagesListener = messagesRef.child(channelId).orderByChild('timestamp').startAt(Date.now()).on('child_added', async function(snapshot) {
             const message = snapshot.val();
             const messageKey = snapshot.key;
@@ -1072,26 +1218,20 @@
             channels.push({ id: child.key, ...child.val() });
         });
         channels.sort((a, b) => a.createdAt - b.createdAt);
-        let hasAccessible = false;
+        
         for (const channel of channels) {
             const canView = await checkChannelPermissions(channel.id, currentUser.id, 'view');
             if (canView) {
-                hasAccessible = true;
                 const channelDiv = document.createElement('div');
                 channelDiv.className = `channel-item ${currentChannelId === channel.id ? 'active' : ''}`;
                 channelDiv.textContent = `# ${channel.displayName || channel.name}`;
-                channelDiv.onclick = () => switchChannel(channel.id);
+                channelDiv.onclick = (function(id) {
+                    return function() { switchChannel(id); };
+                })(channel.id);
                 channelsList.appendChild(channelDiv);
             }
         }
-        if (!hasAccessible && channels.length > 0) {
-            for (const channel of channels) {
-                if (await checkChannelPermissions(channel.id, currentUser.id, 'view')) {
-                    if (!currentChannelId) await switchChannel(channel.id);
-                    break;
-                }
-            }
-        }
+        
         if (!currentChannelId && channels.length > 0) {
             for (const channel of channels) {
                 if (await checkChannelPermissions(channel.id, currentUser.id, 'view')) {
@@ -1162,6 +1302,14 @@
                 type: type,
                 channelId: currentChannelId
             };
+            
+            if (replyingTo) {
+                message.replyTo = replyingTo.messageId;
+                message.replyToUsername = replyingTo.username;
+                message.replyToText = replyingTo.text;
+                cancelReply();
+            }
+            
             await messagesRef.child(currentChannelId).push(message);
             const input = document.getElementById('messageInput');
             if (input) input.value = '';
@@ -1180,6 +1328,7 @@
     }
     
     function escapeHtml(text) {
+        if (!text) return '';
         const div = document.createElement('div');
         div.textContent = text;
         return div.innerHTML;
@@ -1637,6 +1786,7 @@
         }
         currentUser = null;
         currentChannelId = null;
+        replyingTo = null;
         localStorage.removeItem('chatUser');
         renderAuthScreen();
     }
@@ -1666,14 +1816,20 @@
                     </div>
                     <div class="chat-messages" id="chatMessages"></div>
                     <div class="bottom-panel">
-                        ${isAdmin ? '<button class="admin-btn" onclick="window.showAdminPanel()">Admin Panel</button>' : ''}
-                        <div class="message-input-wrapper">
-                            <input type="text" id="messageInput" placeholder="Type a message...">
-                            <div class="media-buttons">
-                                <button class="media-btn" onclick="window.showImageUploadDialog()">Image</button>
-                                <button class="media-btn" onclick="window.showGifUploadDialog()">GIF</button>
+                        <div id="replyBar" class="reply-bar">
+                            <span id="replyText"></span>
+                            <button class="cancel-reply" onclick="cancelReply()">✖</button>
+                        </div>
+                        <div class="input-area">
+                            ${isAdmin ? '<button class="admin-btn" onclick="window.showAdminPanel()">Admin Panel</button>' : ''}
+                            <div class="message-input-wrapper">
+                                <input type="text" id="messageInput" placeholder="Type a message...">
+                                <div class="media-buttons">
+                                    <button class="media-btn" onclick="window.showImageUploadDialog()">Image</button>
+                                    <button class="media-btn" onclick="window.showGifUploadDialog()">GIF</button>
+                                </div>
+                                <button id="sendButton" onclick="sendMessage(document.getElementById('messageInput').value)">Send</button>
                             </div>
-                            <button id="sendButton" onclick="sendMessage(document.getElementById('messageInput').value)">Send</button>
                         </div>
                     </div>
                 </div>
@@ -1895,6 +2051,9 @@
     window.logout = logout;
     window.showProfileModal = showProfileModal;
     window.showUserProfile = showUserProfile;
+    window.deleteMessage = deleteMessage;
+    window.setReplyTo = setReplyTo;
+    window.cancelReply = cancelReply;
     
     async function init() {
         const savedUser = localStorage.getItem('chatUser');
