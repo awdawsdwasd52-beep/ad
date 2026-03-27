@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Full Chat - Infinite Scroll with Reply & Delete</title>
+    <title>Full Chat - Lobby + Channels + Private Messages</title>
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -22,6 +22,167 @@
             overflow: hidden;
         }
 
+        /* LOBBY STYLES */
+        .lobby-container {
+            height: 100vh;
+            width: 100vw;
+            background: black;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 40px;
+            padding: 20px;
+        }
+
+        .lobby-brand {
+            text-align: center;
+        }
+
+        .lobby-brand h1 {
+            font-size: 3rem;
+            color: white;
+            letter-spacing: 2px;
+        }
+
+        .lobby-brand p {
+            color: #888;
+            margin-top: 10px;
+        }
+
+        .main-lobby-card {
+            background: #0a0a0a;
+            border: 1px solid #2a2a2a;
+            border-radius: 30px;
+            padding: 20px;
+            width: 100%;
+            max-width: 500px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-align: center;
+        }
+
+        .main-lobby-card:hover {
+            background: #1a1a1a;
+            transform: scale(1.02);
+            border-color: #3a3a3a;
+        }
+
+        .lobby-symbol {
+            width: 80px;
+            height: 80px;
+            background: black;
+            border: 2px solid #2a2a2a;
+            border-radius: 20px;
+            margin: 0 auto 15px auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .lobby-symbol span {
+            font-size: 3rem;
+            font-weight: bold;
+            color: white;
+        }
+
+        .main-lobby-card h2 {
+            color: white;
+            margin-bottom: 8px;
+        }
+
+        .main-lobby-card p {
+            color: #888;
+            font-size: 0.85rem;
+        }
+
+        .private-chat-section {
+            background: #0a0a0a;
+            border: 1px solid #2a2a2a;
+            border-radius: 30px;
+            padding: 25px;
+            width: 100%;
+            max-width: 500px;
+        }
+
+        .private-title {
+            color: white;
+            margin-bottom: 15px;
+            font-size: 1.2rem;
+            text-align: center;
+        }
+
+        .private-input-group {
+            display: flex;
+            gap: 10px;
+        }
+
+        .private-input {
+            flex: 1;
+            padding: 12px 16px;
+            background: #1a1a1a;
+            border: 1px solid #2a2a2a;
+            border-radius: 30px;
+            color: white;
+            outline: none;
+        }
+
+        .private-btn {
+            background: #2b2b2b;
+            border: 1px solid #3a3a3a;
+            padding: 0 20px;
+            border-radius: 30px;
+            color: white;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .user-profile-lobby {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: #0a0a0a;
+            padding: 8px 16px;
+            border-radius: 40px;
+            border: 1px solid #2a2a2a;
+        }
+
+        .user-profile-lobby img {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        .user-profile-lobby span {
+            color: white;
+            font-weight: 500;
+        }
+
+        .logout-lobby {
+            background: #2b2b2b;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 20px;
+            color: white;
+            cursor: pointer;
+        }
+
+        .back-to-lobby {
+            background: #2b2b2b;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 20px;
+            color: white;
+            cursor: pointer;
+            margin-left: 10px;
+            font-size: 0.75rem;
+        }
+
+        /* MAIN APP STYLES - ORIGINAL FULL */
         .app-container {
             display: flex;
             height: 100vh;
@@ -734,114 +895,6 @@
             text-align: center;
             padding: 20px;
         }
-        
-        /* Home screen styles */
-        .home-container {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100vh;
-            background: black;
-            gap: 40px;
-        }
-        
-        .app-logo {
-            width: 150px;
-            height: 150px;
-            background: #0a0a0a;
-            border-radius: 30px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            border: 1px solid #2a2a2a;
-        }
-        
-        .app-logo:hover {
-            transform: scale(1.05);
-            border-color: #667eea;
-            box-shadow: 0 0 20px rgba(102,126,234,0.3);
-        }
-        
-        .app-logo span {
-            font-size: 5rem;
-            font-weight: bold;
-            color: white;
-        }
-        
-        .private-chat-card {
-            background: #0a0a0a;
-            border: 1px solid #2a2a2a;
-            border-radius: 20px;
-            padding: 30px;
-            width: 90%;
-            max-width: 400px;
-            text-align: center;
-        }
-        
-        .private-chat-card h3 {
-            color: white;
-            margin-bottom: 20px;
-        }
-        
-        .private-input {
-            width: 100%;
-            padding: 12px 16px;
-            background: #1a1a1a;
-            border: 1px solid #2a2a2a;
-            border-radius: 25px;
-            color: white;
-            margin-bottom: 15px;
-            outline: none;
-        }
-        
-        .private-input:focus {
-            border-color: #667eea;
-        }
-        
-        .start-chat-btn {
-            width: 100%;
-            padding: 12px;
-            background: #2b2b2b;
-            border: 1px solid #3a3a3a;
-            border-radius: 25px;
-            color: white;
-            cursor: pointer;
-            font-size: 1rem;
-        }
-        
-        .start-chat-btn:hover {
-            background: #3a3a3a;
-        }
-        
-        .back-to-home {
-            position: fixed;
-            bottom: 20px;
-            left: 20px;
-            background: #2b2b2b;
-            border: 1px solid #3a3a3a;
-            padding: 8px 16px;
-            border-radius: 20px;
-            color: white;
-            cursor: pointer;
-            z-index: 100;
-        }
-        
-        .back-to-home:hover {
-            background: #3a3a3a;
-        }
-        
-        .dm-header {
-            background: #0a0a0a;
-            border-bottom: 1px solid #2a2a2a;
-            padding: 15px 20px;
-            color: white;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
     </style>
 </head>
 <body>
@@ -858,9 +911,9 @@
     let currentChannelId = null;
     let currentUser = null;
     let isAdmin = false;
-    let isInHomeScreen = true;
-    let currentDMRecipient = null;
-    let dmMessagesListener = null;
+    let isInLobby = true;
+    let privateChatTarget = null;
+    let privateMessagesListener = null;
     
     const firebaseConfig = {
         apiKey: "AIzaSyB9XzL1XzL1XzL1XzL1XzL1XzL1XzL1",
@@ -881,7 +934,7 @@
     const channelsRef = database.ref('channels');
     const rolesRef = database.ref('roles');
     const userRolesRef = database.ref('user_roles');
-    const dmsRef = database.ref('direct_messages');
+    const privateMessagesRef = database.ref('private_messages');
     
     function getDirectGifUrl(url) {
         if (url.includes('tenor.com')) {
@@ -1050,12 +1103,7 @@
         });
         
         if (result.isConfirmed) {
-            if (currentDMRecipient) {
-                const dmId = getDMId(currentUser.id, currentDMRecipient.id);
-                await dmsRef.child(dmId).child(messageId).remove();
-            } else {
-                await messagesRef.child(currentChannelId).child(messageId).remove();
-            }
+            await messagesRef.child(currentChannelId).child(messageId).remove();
             const messageElement = document.querySelector(`.message[data-key="${messageId}"]`);
             if (messageElement) {
                 messageElement.remove();
@@ -1085,14 +1133,13 @@
     }
     
     async function loadMoreMessages() {
-        if ((!currentChannelId && !currentDMRecipient) || isLoadingMore || !hasMoreMessages) return;
+        if (!currentChannelId || isLoadingMore || !hasMoreMessages || isInLobby || privateChatTarget) return;
         isLoadingMore = true;
         const loader = document.getElementById('messagesLoader');
         if (loader) loader.classList.add('active');
         
         try {
-            let ref = currentDMRecipient ? dmsRef.child(getDMId(currentUser.id, currentDMRecipient.id)) : messagesRef.child(currentChannelId);
-            let query = ref.orderByChild('timestamp');
+            let query = messagesRef.child(currentChannelId).orderByChild('timestamp');
             if (oldestMessageTimestamp) {
                 query = query.endAt(oldestMessageTimestamp - 1);
             }
@@ -1155,7 +1202,7 @@
         if (!messagesContainer) return;
         
         const onScroll = () => {
-            if (messagesContainer.scrollTop <= 50 && !isLoadingMore && hasMoreMessages && (currentChannelId || currentDMRecipient)) {
+            if (messagesContainer.scrollTop <= 50 && !isLoadingMore && hasMoreMessages && currentChannelId && !isInLobby && !privateChatTarget) {
                 loadMoreMessages();
             }
         };
@@ -1234,7 +1281,8 @@
         scrollToBottom();
     }
     
-    async function loadInitialMessages() {
+    async function loadInitialMessages(channelId) {
+        if (!channelId) return;
         const messagesContainer = document.getElementById('chatMessages');
         if (!messagesContainer) return;
         
@@ -1244,8 +1292,7 @@
         oldestMessageTimestamp = null;
         
         try {
-            let ref = currentDMRecipient ? dmsRef.child(getDMId(currentUser.id, currentDMRecipient.id)) : messagesRef.child(currentChannelId);
-            const snapshot = await ref.orderByChild('timestamp').limitToLast(20).once('value');
+            const snapshot = await messagesRef.child(channelId).orderByChild('timestamp').limitToLast(20).once('value');
             const messages = [];
             snapshot.forEach(child => {
                 messages.push({ key: child.key, ...child.val() });
@@ -1281,50 +1328,6 @@
         }
     }
     
-    function getDMId(userId1, userId2) {
-        return [userId1, userId2].sort().join('_');
-    }
-    
-    async function startDM(recipientUsername) {
-        const userSnapshot = await usersRef.orderByChild('username').equalTo(recipientUsername).once('value');
-        if (!userSnapshot.exists()) {
-            Swal.fire('Error', 'User not found', 'error');
-            return false;
-        }
-        let recipient = null;
-        userSnapshot.forEach(child => {
-            if (child.key !== currentUser.id) {
-                recipient = { id: child.key, username: child.val().username, displayName: child.val().displayName, avatar: child.val().avatar };
-            }
-        });
-        if (!recipient) {
-            Swal.fire('Error', 'Cannot message yourself', 'error');
-            return false;
-        }
-        currentDMRecipient = recipient;
-        isInHomeScreen = false;
-        currentChannelId = null;
-        if (currentMessagesListener && currentChannelId) {
-            messagesRef.child(currentChannelId).off('child_added', currentMessagesListener);
-        }
-        if (dmMessagesListener) {
-            const oldDmId = getDMId(currentUser.id, dmMessagesListener.recipientId);
-            dmsRef.child(oldDmId).off('child_added', dmMessagesListener.listener);
-        }
-        const dmId = getDMId(currentUser.id, recipient.id);
-        const listenerFunc = async function(snapshot) {
-            const message = snapshot.val();
-            const messageKey = snapshot.key;
-            if (displayedMessagesSet.has(messageKey)) return;
-            await displayMessage(message, messageKey);
-        };
-        dmMessagesListener = { recipientId: recipient.id, listener: listenerFunc };
-        dmsRef.child(dmId).orderByChild('timestamp').startAt(Date.now()).on('child_added', listenerFunc);
-        await loadInitialMessages();
-        renderMainApp();
-        return true;
-    }
-    
     async function switchChannel(channelId) {
         if (!channelId) return;
         
@@ -1337,16 +1340,10 @@
         if (currentMessagesListener && currentChannelId) {
             messagesRef.child(currentChannelId).off('child_added', currentMessagesListener);
         }
-        if (dmMessagesListener) {
-            const oldDmId = getDMId(currentUser.id, dmMessagesListener.recipientId);
-            dmsRef.child(oldDmId).off('child_added', dmMessagesListener.listener);
-            dmMessagesListener = null;
-        }
         
         currentChannelId = channelId;
-        currentDMRecipient = null;
         cancelReply();
-        await loadInitialMessages();
+        await loadInitialMessages(channelId);
         
         currentMessagesListener = messagesRef.child(channelId).orderByChild('timestamp').startAt(Date.now()).on('child_added', async function(snapshot) {
             const message = snapshot.val();
@@ -1359,7 +1356,6 @@
         
         await loadChannelsSidebar();
         updateChannelName();
-        renderMainApp();
     }
     
     async function loadChannelsSidebar() {
@@ -1392,7 +1388,7 @@
             const canView = await checkChannelPermissions(channel.id, currentUser.id, 'view');
             if (canView) {
                 const channelDiv = document.createElement('div');
-                channelDiv.className = `channel-item ${currentChannelId === channel.id && !currentDMRecipient ? 'active' : ''}`;
+                channelDiv.className = `channel-item ${currentChannelId === channel.id ? 'active' : ''}`;
                 channelDiv.textContent = `# ${channel.displayName || channel.name}`;
                 channelDiv.onclick = (function(id) {
                     return function() { switchChannel(id); };
@@ -1401,7 +1397,7 @@
             }
         }
         
-        if (!currentChannelId && !currentDMRecipient && channels.length > 0) {
+        if (!currentChannelId && channels.length > 0) {
             for (const channel of channels) {
                 if (await checkChannelPermissions(channel.id, currentUser.id, 'view')) {
                     await switchChannel(channel.id);
@@ -1409,7 +1405,7 @@
                 }
             }
         }
-        if (currentChannelId && !currentDMRecipient) updateChannelName();
+        if (currentChannelId) updateChannelName();
     }
     
     function updateChannelName() {
@@ -1440,93 +1436,76 @@
     async function sendMessage(text, type = 'text') {
         if (!text || !text.trim() || !currentUser) return;
         
-        if (currentDMRecipient) {
-            const isMuted = await mutesRef.child(currentUser.id).once('value');
-            if (isMuted.exists()) {
-                const muteData = isMuted.val();
-                if (muteData.expiresAt > Date.now()) {
-                    Swal.fire('Error', 'You are muted', 'error');
-                    return;
-                } else {
-                    await mutesRef.child(currentUser.id).remove();
-                }
-            }
-            const sendBtn = document.getElementById('sendButton');
-            if (sendBtn) sendBtn.disabled = true;
-            try {
-                const userData = await usersRef.child(currentUser.id).once('value');
-                const userInfo = userData.val();
-                const message = {
-                    text: text.trim(),
-                    username: currentUser.username,
-                    displayName: userInfo.displayName || currentUser.username,
-                    avatar: userInfo.avatar || null,
-                    userId: currentUser.id,
-                    timestamp: Date.now(),
-                    type: type
-                };
-                if (replyingTo) {
-                    message.replyTo = replyingTo.messageId;
-                    message.replyToUsername = replyingTo.username;
-                    message.replyToText = replyingTo.text;
-                    cancelReply();
-                }
-                const dmId = getDMId(currentUser.id, currentDMRecipient.id);
-                await dmsRef.child(dmId).push(message);
-                const input = document.getElementById('messageInput');
-                if (input) input.value = '';
-            } catch (error) {
-                console.error('Send error:', error);
-            } finally {
-                if (sendBtn) sendBtn.disabled = false;
-            }
-        } else if (currentChannelId) {
-            const canSend = await checkChannelPermissions(currentChannelId, currentUser.id, 'send');
-            if (!canSend) {
-                Swal.fire('Access Denied', 'You do not have permission to send messages in this channel', 'error');
+        // Private message mode
+        if (privateChatTarget) {
+            const privateId = [currentUser.id, privateChatTarget.userId].sort().join('_');
+            const msg = {
+                text: text.trim(),
+                fromId: currentUser.id,
+                fromName: currentUser.displayName || currentUser.username,
+                fromAvatar: currentUser.avatar,
+                toId: privateChatTarget.userId,
+                toName: privateChatTarget.displayName,
+                timestamp: Date.now(),
+                type: type
+            };
+            await privateMessagesRef.child(privateId).push(msg);
+            const input = document.getElementById('messageInput');
+            if (input) input.value = '';
+            await loadPrivateMessages(privateChatTarget.userId);
+            return;
+        }
+        
+        // Channel mode
+        if (!currentChannelId) return;
+        
+        const canSend = await checkChannelPermissions(currentChannelId, currentUser.id, 'send');
+        if (!canSend) {
+            Swal.fire('Access Denied', 'You do not have permission to send messages in this channel', 'error');
+            return;
+        }
+        const slowmodeOk = await checkSlowmode(currentChannelId, currentUser.id);
+        if (!slowmodeOk) return;
+        const isMuted = await mutesRef.child(currentUser.id).once('value');
+        if (isMuted.exists()) {
+            const muteData = isMuted.val();
+            if (muteData.expiresAt > Date.now()) {
+                Swal.fire('Error', 'You are muted and cannot send messages', 'error');
                 return;
+            } else {
+                await mutesRef.child(currentUser.id).remove();
             }
-            const slowmodeOk = await checkSlowmode(currentChannelId, currentUser.id);
-            if (!slowmodeOk) return;
-            const isMuted = await mutesRef.child(currentUser.id).once('value');
-            if (isMuted.exists()) {
-                const muteData = isMuted.val();
-                if (muteData.expiresAt > Date.now()) {
-                    Swal.fire('Error', 'You are muted and cannot send messages', 'error');
-                    return;
-                } else {
-                    await mutesRef.child(currentUser.id).remove();
-                }
+        }
+        const sendBtn = document.getElementById('sendButton');
+        if (sendBtn) sendBtn.disabled = true;
+        try {
+            const userData = await usersRef.child(currentUser.id).once('value');
+            const userInfo = userData.val();
+            const message = {
+                text: text.trim(),
+                username: currentUser.username,
+                displayName: userInfo.displayName || currentUser.username,
+                avatar: userInfo.avatar || null,
+                userId: currentUser.id,
+                timestamp: Date.now(),
+                type: type,
+                channelId: currentChannelId
+            };
+            
+            if (replyingTo) {
+                message.replyTo = replyingTo.messageId;
+                message.replyToUsername = replyingTo.username;
+                message.replyToText = replyingTo.text;
+                cancelReply();
             }
-            const sendBtn = document.getElementById('sendButton');
-            if (sendBtn) sendBtn.disabled = true;
-            try {
-                const userData = await usersRef.child(currentUser.id).once('value');
-                const userInfo = userData.val();
-                const message = {
-                    text: text.trim(),
-                    username: currentUser.username,
-                    displayName: userInfo.displayName || currentUser.username,
-                    avatar: userInfo.avatar || null,
-                    userId: currentUser.id,
-                    timestamp: Date.now(),
-                    type: type,
-                    channelId: currentChannelId
-                };
-                if (replyingTo) {
-                    message.replyTo = replyingTo.messageId;
-                    message.replyToUsername = replyingTo.username;
-                    message.replyToText = replyingTo.text;
-                    cancelReply();
-                }
-                await messagesRef.child(currentChannelId).push(message);
-                const input = document.getElementById('messageInput');
-                if (input) input.value = '';
-            } catch (error) {
-                console.error('Send error:', error);
-            } finally {
-                if (sendBtn) sendBtn.disabled = false;
-            }
+            
+            await messagesRef.child(currentChannelId).push(message);
+            const input = document.getElementById('messageInput');
+            if (input) input.value = '';
+        } catch (error) {
+            console.error('Send error:', error);
+        } finally {
+            if (sendBtn) sendBtn.disabled = false;
         }
     }
     
@@ -1611,7 +1590,9 @@
                 });
                 currentUser.displayName = result.value.displayName;
                 Swal.fire('Success', 'Profile updated', 'success');
-                renderMainApp();
+                if (!isInLobby && !privateChatTarget) renderMainApp();
+                else if (privateChatTarget) renderPrivateChatUI();
+                else renderMainLobby();
             }
         });
     }
@@ -1641,7 +1622,9 @@
                 await usersRef.child(currentUser.id).update({ avatar: url });
                 currentUser.avatar = url;
                 Swal.fire('Success', 'Avatar updated', 'success');
-                renderMainApp();
+                if (!isInLobby && !privateChatTarget) renderMainApp();
+                else if (privateChatTarget) renderPrivateChatUI();
+                else renderMainLobby();
             }
         } else if (choice === 'file') {
             const { value: file } = await Swal.fire({
@@ -1659,7 +1642,9 @@
                 await usersRef.child(currentUser.id).update({ avatar: avatarUrl });
                 currentUser.avatar = avatarUrl;
                 Swal.fire('Success', 'Avatar updated', 'success');
-                renderMainApp();
+                if (!isInLobby && !privateChatTarget) renderMainApp();
+                else if (privateChatTarget) renderPrivateChatUI();
+                else renderMainLobby();
             }
         }
     }
@@ -1694,9 +1679,20 @@
         });
     }
     
-    function showAdminPanel() { if (!isAdmin) { Swal.fire('Error', 'No admin permissions', 'error'); return; } document.getElementById('adminModal').style.display = 'block'; loadAdminData(); }
+    function showAdminPanel() { 
+        if (!isAdmin) { 
+            Swal.fire('Error', 'No admin permissions', 'error'); 
+            return; 
+        } 
+        document.getElementById('adminModal').style.display = 'block'; 
+        loadAdminData(); 
+    }
     
-    async function loadAdminData() { await loadUsersList(); await loadRolesList(); await loadChannelsList(); }
+    async function loadAdminData() { 
+        await loadUsersList(); 
+        await loadRolesList(); 
+        await loadChannelsListAdmin(); 
+    }
     
     async function loadUsersList() {
         const usersList = document.getElementById('usersList');
@@ -1729,7 +1725,7 @@
         });
     }
     
-    async function loadChannelsList() {
+    async function loadChannelsListAdmin() {
         const channelsList = document.getElementById('channelsListAdmin');
         if (!channelsList) return;
         channelsList.innerHTML = '<div class="loading-text">Loading...</div>';
@@ -1955,7 +1951,7 @@
                 displayName: newName
             });
             Swal.fire('Success', 'Channel updated', 'success');
-            loadChannelsList();
+            loadChannelsListAdmin();
             loadChannelsSidebar();
             updateChannelName();
         }
@@ -1974,7 +1970,7 @@
             await channelsRef.child(channelId).remove();
             await messagesRef.child(channelId).remove();
             Swal.fire('Deleted', 'Channel deleted', 'success');
-            loadChannelsList();
+            loadChannelsListAdmin();
             const snapshot = await channelsRef.once('value');
             let newChannelId = null;
             snapshot.forEach(child => {
@@ -1990,68 +1986,142 @@
         }
     }
     
-    function goHome() {
+    async function loadPrivateMessages(targetId) {
+        const container = document.getElementById('chatMessages');
+        if (!container) return;
+        container.innerHTML = '<div class="loading-text">Loading private messages...</div>';
+        const privateId = [currentUser.id, targetId].sort().join('_');
+        const snapshot = await privateMessagesRef.child(privateId).orderByChild('timestamp').once('value');
+        const msgs = [];
+        snapshot.forEach(c => msgs.push({ key: c.key, ...c.val() }));
+        msgs.sort((a, b) => a.timestamp - b.timestamp);
+        container.innerHTML = '';
+        for (const msg of msgs) {
+            const isOwn = msg.fromId === currentUser.id;
+            const div = document.createElement('div');
+            div.className = `message ${isOwn ? 'sent' : 'received'}`;
+            const senderName = isOwn ? (currentUser.displayName || currentUser.username) : (privateChatTarget.displayName || privateChatTarget.username);
+            const avatar = isOwn ? (currentUser.avatar || '') : (privateChatTarget.avatar || '');
+            const timeStr = new Date(msg.timestamp).toLocaleTimeString();
+            let content = (msg.type === 'image' || msg.type === 'gif') ? `<img src="${escapeHtml(msg.text)}" style="max-width:250px; border-radius:10px;">` : `<div>${escapeHtml(msg.text)}</div>`;
+            div.innerHTML = `<div class="message-info"><img class="message-avatar" src="${avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(senderName)}`}" style="width:24px;height:24px;"><span>${escapeHtml(senderName)}</span><span>${timeStr}</span></div>${content}`;
+            container.appendChild(div);
+        }
+        scrollToBottom();
+        if (privateMessagesListener) privateMessagesRef.child(privateId).off('child_added', privateMessagesListener);
+        privateMessagesListener = privateMessagesRef.child(privateId).orderByChild('timestamp').startAt(Date.now()).on('child_added', async snap => {
+            const msg = snap.val();
+            if ((msg.fromId === currentUser.id && msg.toId === targetId) || (msg.fromId === targetId && msg.toId === currentUser.id)) {
+                const isOwn = msg.fromId === currentUser.id;
+                const div = document.createElement('div');
+                div.className = `message ${isOwn ? 'sent' : 'received'}`;
+                const senderName = isOwn ? (currentUser.displayName || currentUser.username) : (privateChatTarget.displayName || privateChatTarget.username);
+                const avatar = isOwn ? (currentUser.avatar || '') : (privateChatTarget.avatar || '');
+                const timeStr = new Date(msg.timestamp).toLocaleTimeString();
+                let content = (msg.type === 'image' || msg.type === 'gif') ? `<img src="${escapeHtml(msg.text)}" style="max-width:250px;">` : `<div>${escapeHtml(msg.text)}</div>`;
+                div.innerHTML = `<div class="message-info"><img class="message-avatar" src="${avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(senderName)}`}" style="width:24px;"><span>${escapeHtml(senderName)}</span><span>${timeStr}</span></div>${content}`;
+                document.getElementById('chatMessages')?.appendChild(div);
+                scrollToBottom();
+            }
+        });
+    }
+    
+    async function startPrivateChat(targetUsername) {
+        const snapshot = await usersRef.orderByChild('username').equalTo(targetUsername).once('value');
+        if (!snapshot.exists()) { 
+            Swal.fire('Error', 'User not found', 'error'); 
+            return null; 
+        }
+        let targetUser = null;
+        snapshot.forEach(s => { 
+            targetUser = { 
+                id: s.key, 
+                username: s.val().username, 
+                displayName: s.val().displayName, 
+                avatar: s.val().avatar 
+            }; 
+        });
+        if (targetUser.id === currentUser.id) { 
+            Swal.fire('Error', 'Cannot chat with yourself', 'error'); 
+            return null; 
+        }
+        if (privateMessagesListener && privateChatTarget) { 
+            const oldId = [currentUser.id, privateChatTarget.userId].sort().join('_'); 
+            privateMessagesRef.child(oldId).off('child_added', privateMessagesListener); 
+        }
         if (currentMessagesListener && currentChannelId) {
             messagesRef.child(currentChannelId).off('child_added', currentMessagesListener);
         }
-        if (dmMessagesListener) {
-            const oldDmId = getDMId(currentUser.id, dmMessagesListener.recipientId);
-            dmsRef.child(oldDmId).off('child_added', dmMessagesListener.listener);
-            dmMessagesListener = null;
-        }
-        currentChannelId = null;
-        currentDMRecipient = null;
-        isInHomeScreen = true;
-        renderHomeScreen();
+        privateChatTarget = targetUser;
+        isInLobby = false;
+        renderPrivateChatUI();
+        return targetUser;
     }
     
-    function renderHomeScreen() {
+    function renderPrivateChatUI() {
+        if (!privateChatTarget) return;
+        const displayName = currentUser.displayName || currentUser.username;
+        const avatarUrl = currentUser.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(displayName)}&background=2b2b2b&color=white&size=32`;
+        const appDiv = document.getElementById('app');
+        appDiv.innerHTML = `
+            <div class="app-container">
+                <div class="main-container">
+                    <div class="chat-header">
+                        <div><h2>💬 DM with ${escapeHtml(privateChatTarget.displayName || privateChatTarget.username)}</h2><p>Private conversation</p></div>
+                        <div class="user-profile"><img src="${avatarUrl}" style="width:32px;height:32px;border-radius:50%;"><button class="profile-btn" onclick="window.showProfileModal()">${escapeHtml(displayName)}</button><button class="back-to-lobby" onclick="backToLobbyFromPrivate()">← Back to Lobby</button><button class="logout-btn" onclick="logout()">Logout</button></div>
+                    </div>
+                    <div class="chat-messages" id="chatMessages"></div>
+                    <div class="bottom-panel">
+                        <div class="input-area"><div class="message-input-wrapper"><input type="text" id="messageInput" placeholder="Type a private message..."><div class="media-buttons"><button class="media-btn" onclick="window.showImageUploadDialog()">Image</button><button class="media-btn" onclick="window.showGifUploadDialog()">GIF</button></div><button id="sendButton" onclick="sendMessage(document.getElementById('messageInput').value)">Send</button></div></div>
+                    </div>
+                </div>
+                <div class="members-sidebar" style="width:280px;"><div class="members-header">Chat</div><div class="members-list"><div class="member-item"><div>🔒 Private Messages</div></div></div></div>
+            </div>`;
+        document.getElementById('messageInput').onkeypress = e => { if (e.key === 'Enter') sendMessage(e.target.value); };
+        loadPrivateMessages(privateChatTarget.userId);
+    }
+    
+    function backToLobbyFromPrivate() {
+        if (privateMessagesListener && privateChatTarget) { 
+            const pid = [currentUser.id, privateChatTarget.userId].sort().join('_'); 
+            privateMessagesRef.child(pid).off('child_added', privateMessagesListener); 
+        }
+        privateChatTarget = null;
+        isInLobby = true;
+        renderMainLobby();
+    }
+    
+    function renderMainLobby() {
         const displayName = currentUser.displayName || currentUser.username;
         const avatarUrl = currentUser.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(displayName)}&background=2b2b2b&color=white&size=40`;
         const appDiv = document.getElementById('app');
         appDiv.innerHTML = `
-            <div class="home-container">
-                <div class="app-logo" onclick="enterMainChat()">
-                    <span>S</span>
-                </div>
-                <div class="private-chat-card">
-                    <h3>Private Message</h3>
-                    <input type="text" id="dmUsername" class="private-input" placeholder="Enter username">
-                    <button class="start-chat-btn" onclick="startPrivateChat()">Start Chat</button>
-                </div>
-                <div style="position: fixed; top: 20px; right: 20px; display: flex; gap: 10px;">
-                    <img src="${avatarUrl}" style="width:40px;height:40px;border-radius:50%;">
-                    <button class="profile-btn" onclick="window.showProfileModal()">${escapeHtml(displayName)}</button>
-                    <button class="logout-btn" onclick="logout()">Logout</button>
-                </div>
-            </div>
-        `;
+            <div class="lobby-container">
+                <div class="user-profile-lobby"><img src="${avatarUrl}"><span>${escapeHtml(displayName)}</span><button class="logout-lobby" onclick="logout()">Logout</button></div>
+                <div class="lobby-brand"><h1>NEXUS CHAT</h1><p>Connect, share, create</p></div>
+                <div class="main-lobby-card" id="enterChannelsBtn"><div class="lobby-symbol"><span>S</span></div><h2>Enter Channels</h2><p>Join public rooms, text channels, and communities</p></div>
+                <div class="private-chat-section"><div class="private-title">✉️ Direct Message</div><div class="private-input-group"><input type="text" id="dmUsername" class="private-input" placeholder="Enter username"><button class="private-btn" id="startDmBtn">Start Chat</button></div></div>
+            </div>`;
+        document.getElementById('enterChannelsBtn').onclick = () => enterFullApp();
+        document.getElementById('startDmBtn').onclick = async () => {
+            const username = document.getElementById('dmUsername').value.trim();
+            if (!username) return Swal.fire('Error', 'Enter username', 'error');
+            await startPrivateChat(username);
+        };
     }
     
-    async function startPrivateChat() {
-        const username = document.getElementById('dmUsername').value.trim();
-        if (!username) {
-            Swal.fire('Error', 'Enter username', 'error');
-            return;
+    function enterFullApp() {
+        if (currentMessagesListener && currentChannelId) {
+            messagesRef.child(currentChannelId).off('child_added', currentMessagesListener);
         }
-        await startDM(username);
-    }
-    
-    function enterMainChat() {
-        isInHomeScreen = false;
-        if (!currentChannelId) {
-            loadChannelsSidebar().then(() => {
-                renderMainApp();
-            });
-        } else {
-            renderMainApp();
-        }
+        isInLobby = false;
+        privateChatTarget = null;
+        renderMainApp();
     }
     
     function renderMainApp() {
         const displayName = currentUser.displayName || currentUser.username;
         const avatarUrl = currentUser.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(displayName)}&background=2b2b2b&color=white&size=32`;
-        const headerTitle = currentDMRecipient ? `DM with ${currentDMRecipient.displayName || currentDMRecipient.username}` : (currentChannelId ? '<span id="channelName"># Loading...</span>' : 'Chat');
         const appDiv = document.getElementById('app');
         appDiv.innerHTML = `
             <div class="app-container">
@@ -2063,12 +2133,13 @@
                 <div class="main-container">
                     <div class="chat-header">
                         <div class="channel-info">
-                            <h2>${headerTitle}</h2>
-                            <p>${currentDMRecipient ? 'Direct Message' : 'Text channel'} <span id="slowmodeIndicator" class="slowmode-indicator" style="display:none;"></span></p>
+                            <h2 id="channelName"># Loading...</h2>
+                            <p>Text channel <span id="slowmodeIndicator" class="slowmode-indicator" style="display:none;"></span></p>
                         </div>
                         <div class="user-profile">
                             <img src="${avatarUrl}" style="width:32px;height:32px;border-radius:50%;" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(displayName)}&background=2b2b2b&color=white&size=32'">
                             <button class="profile-btn" onclick="window.showProfileModal()">${escapeHtml(displayName)}</button>
+                            <button class="back-to-lobby" onclick="backToLobby()">🏠 Lobby</button>
                             <button class="logout-btn" onclick="logout()">Logout</button>
                         </div>
                     </div>
@@ -2120,15 +2191,8 @@
                     </div>
                 </div>
             </div>
-            <div class="back-to-home" onclick="goHome()">← Back to Home</div>
         `;
-        if (!currentDMRecipient && currentChannelId) {
-            updateChannelName();
-            loadChannelsSidebar();
-        } else if (currentDMRecipient) {
-            const channelsList = document.getElementById('channelsList');
-            if (channelsList) loadChannelsSidebar();
-        }
+        loadChannelsSidebar();
         loadMembers();
         const messageInput = document.getElementById('messageInput');
         if (messageInput) {
@@ -2139,6 +2203,33 @@
                 }
             };
         }
+        setupInfiniteScroll();
+    }
+    
+    function backToLobby() {
+        if (currentMessagesListener && currentChannelId) {
+            messagesRef.child(currentChannelId).off('child_added', currentMessagesListener);
+        }
+        isInLobby = true;
+        privateChatTarget = null;
+        renderMainLobby();
+    }
+    
+    function logout() {
+        if (currentMessagesListener && currentChannelId) {
+            messagesRef.child(currentChannelId).off('child_added', currentMessagesListener);
+        }
+        if (privateMessagesListener && privateChatTarget) {
+            const pid = [currentUser.id, privateChatTarget.userId].sort().join('_');
+            privateMessagesRef.child(pid).off('child_added', privateMessagesListener);
+        }
+        currentUser = null;
+        currentChannelId = null;
+        replyingTo = null;
+        privateChatTarget = null;
+        isInLobby = true;
+        localStorage.removeItem('chatUser');
+        renderAuthScreen();
     }
     
     function switchAdminTab(tab) {
@@ -2180,22 +2271,6 @@
             await loadChannelsSidebar();
             await switchChannel(newChannelRef.key);
         }
-    }
-    
-    function logout() {
-        if (currentMessagesListener && currentChannelId) {
-            messagesRef.child(currentChannelId).off('child_added', currentMessagesListener);
-        }
-        if (dmMessagesListener) {
-            const oldDmId = getDMId(currentUser.id, dmMessagesListener.recipientId);
-            dmsRef.child(oldDmId).off('child_added', dmMessagesListener.listener);
-        }
-        currentUser = null;
-        currentChannelId = null;
-        currentDMRecipient = null;
-        replyingTo = null;
-        localStorage.removeItem('chatUser');
-        renderAuthScreen();
     }
     
     function renderAuthScreen() {
@@ -2274,8 +2349,7 @@
                     }
                     localStorage.setItem('chatUser', JSON.stringify(currentUser));
                     isAdmin = currentUser.username === ADMIN_USERNAME;
-                    isInHomeScreen = true;
-                    renderHomeScreen();
+                    renderMainLobby();
                 } else {
                     errorElement.textContent = 'Invalid password';
                     submitButton.disabled = false;
@@ -2305,8 +2379,7 @@
                 };
                 localStorage.setItem('chatUser', JSON.stringify(currentUser));
                 isAdmin = currentUser.username === ADMIN_USERNAME;
-                isInHomeScreen = true;
-                renderHomeScreen();
+                renderMainLobby();
             }
         } catch (error) {
             errorElement.textContent = 'Error: ' + (error.message || 'Unknown');
@@ -2314,32 +2387,6 @@
             submitButton.textContent = isLoginMode ? 'Login' : 'Register';
         }
     }
-    
-    window.banUser = banUser;
-    window.muteUser = muteUser;
-    window.assignRole = assignRole;
-    window.createRole = createRole;
-    window.editRole = editRole;
-    window.deleteRole = deleteRole;
-    window.createChannelWithConfig = createChannelWithConfig;
-    window.configureChannel = configureChannel;
-    window.editChannel = editChannel;
-    window.deleteChannel = deleteChannel;
-    window.showAdminPanel = showAdminPanel;
-    window.showImageUploadDialog = showImageUploadDialog;
-    window.showGifUploadDialog = showGifUploadDialog;
-    window.showAvatarUploadDialog = showAvatarUploadDialog;
-    window.sendMessage = sendMessage;
-    window.switchAdminTab = switchAdminTab;
-    window.logout = logout;
-    window.showProfileModal = showProfileModal;
-    window.showUserProfile = showUserProfile;
-    window.deleteMessage = deleteMessage;
-    window.setReplyTo = setReplyTo;
-    window.cancelReply = cancelReply;
-    window.startPrivateChat = startPrivateChat;
-    window.enterMainChat = enterMainChat;
-    window.goHome = goHome;
     
     async function init() {
         const savedUser = localStorage.getItem('chatUser');
@@ -2367,8 +2414,7 @@
                         }
                     }
                     isAdmin = currentUser.username === ADMIN_USERNAME;
-                    isInHomeScreen = true;
-                    renderHomeScreen();
+                    renderMainLobby();
                     return;
                 }
             } catch (error) {
@@ -2377,6 +2423,32 @@
         }
         renderAuthScreen();
     }
+    
+    // Global exports
+    window.banUser = banUser;
+    window.muteUser = muteUser;
+    window.assignRole = assignRole;
+    window.createRole = createRole;
+    window.editRole = editRole;
+    window.deleteRole = deleteRole;
+    window.createChannelWithConfig = createChannelWithConfig;
+    window.configureChannel = configureChannel;
+    window.editChannel = editChannel;
+    window.deleteChannel = deleteChannel;
+    window.showAdminPanel = showAdminPanel;
+    window.showImageUploadDialog = showImageUploadDialog;
+    window.showGifUploadDialog = showGifUploadDialog;
+    window.showAvatarUploadDialog = showAvatarUploadDialog;
+    window.sendMessage = sendMessage;
+    window.switchAdminTab = switchAdminTab;
+    window.logout = logout;
+    window.showProfileModal = showProfileModal;
+    window.showUserProfile = showUserProfile;
+    window.deleteMessage = deleteMessage;
+    window.setReplyTo = setReplyTo;
+    window.cancelReply = cancelReply;
+    window.backToLobby = backToLobby;
+    window.backToLobbyFromPrivate = backToLobbyFromPrivate;
     
     init();
 </script>
